@@ -1,0 +1,24 @@
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+ENV PYTHONPATH=/opt/retail-analytics-lakehouse
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        openjdk-17-jre-headless \
+        tini \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/retail-analytics-lakehouse
+
+COPY requirements-spark.txt /tmp/requirements-spark.txt
+RUN pip install --no-cache-dir -r /tmp/requirements-spark.txt
+
+COPY . /opt/retail-analytics-lakehouse
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["bash"]
+

@@ -44,3 +44,8 @@ make test
 pre-commit run --all-files
 ```
 
+## AWS Support
+
+- AWS setup guide: [docs/aws-setup.md](C:/Users/USER/retail-analytics-lakehouse/docs/aws-setup.md)
+- Spark Docker image: [Dockerfile.spark](C:/Users/USER/retail-analytics-lakehouse/Dockerfile.spark)
+- Local Docker stack: [docker-compose.yml](C:/Users/USER/retail-analytics-lakehouse/docker-compose.yml)

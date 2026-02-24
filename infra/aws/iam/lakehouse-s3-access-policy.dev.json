@@ -1,0 +1,71 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ListOnlyApprovedPrefixes",
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev"
+      ],
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "bronze",
+            "bronze/*",
+            "silver",
+            "silver/*",
+            "gold",
+            "gold/*",
+            "_checkpoints",
+            "_checkpoints/*",
+            "_quarantine",
+            "_quarantine/*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadBronzeAndSilverObjects",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:GetObjectTagging"
+      ],
+      "Resource": [
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/bronze/*",
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/silver/*"
+      ]
+    },
+    {
+      "Sid": "WriteSilverGoldAndOperationalPaths",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:AbortMultipartUpload",
+        "s3:ListBucketMultipartUploads",
+        "s3:ListMultipartUploadParts"
+      ],
+      "Resource": [
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/silver/*",
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/gold/*",
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/_checkpoints/*",
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/_quarantine/*"
+      ]
+    },
+    {
+      "Sid": "DeleteOperationalArtifactsOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:DeleteObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/_checkpoints/*",
+        "arn:aws:s3:::retail-loyalty-lakehouse-dev/_quarantine/*"
+      ]
+    }
+  ]
+}
+

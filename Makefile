@@ -2,6 +2,7 @@
 
 PYTHON ?= python
 VENV ?= .venv
+PROJECT_DIRS := ingestion spark warehouse dashboard infra tests scripts
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN := $(VENV)/Scripts
@@ -9,23 +10,37 @@ else
 VENV_BIN := $(VENV)/bin
 endif
 
-.PHONY: init format lint test clean
+PIP := $(VENV_BIN)/pip
+PY := $(VENV_BIN)/python
+
+.PHONY: init format lint test-unit test-integration test precommit ci clean
 
 init:
 >$(PYTHON) -m venv $(VENV)
->$(VENV_BIN)/python -m pip install --upgrade pip
->$(VENV_BIN)/pip install pre-commit black ruff pytest
->$(VENV_BIN)/pre-commit install
+>$(PY) -m pip install --upgrade pip
+>$(PIP) install -r requirements-dev.txt
+>$(PY) -m pre_commit install
 
 format:
->$(VENV_BIN)/ruff format ingestion spark warehouse scripts tests
->$(VENV_BIN)/black ingestion spark warehouse scripts tests
+>$(PY) -m ruff format $(PROJECT_DIRS)
+>$(PY) -m black $(PROJECT_DIRS)
 
 lint:
->$(VENV_BIN)/ruff check ingestion spark warehouse scripts tests
+>$(PY) -m ruff check $(PROJECT_DIRS)
+>$(PY) -m black --check $(PROJECT_DIRS)
 
-test:
->$(VENV_BIN)/pytest tests
+test-unit:
+>$(PY) -m pytest tests/ingestion tests/spark/batch -q
+
+test-integration:
+>$(PY) scripts/ci_integration_test.py --rows 1000
+
+test: test-unit test-integration
+
+precommit:
+>$(PY) -m pre_commit run --all-files
+
+ci: lint test-unit test-integration
 
 clean:
 >$(PYTHON) -c "import pathlib, shutil; shutil.rmtree(pathlib.Path('$(VENV)'), ignore_errors=True)"

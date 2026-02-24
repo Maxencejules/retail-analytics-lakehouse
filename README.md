@@ -27,6 +27,7 @@ Detailed architecture reference:
   - [infra/airflow](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/README.md)
   - Batch DAG includes retries, backfills, dependency checks, and SLA miss notifications.
   - Promotion DAG enforces `dev -> stage -> prod` gates with dbt + Soda checks.
+  - Run metadata artifacts are emitted for orchestration audit trails.
 - dbt warehouse discipline:
   - [warehouse/dbt](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/README.md)
   - Staging, marts, and metric models with tests, docs, and lineage artifacts.

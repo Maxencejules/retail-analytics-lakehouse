@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-import json
 import logging
 import os
 from pathlib import Path
@@ -17,8 +16,15 @@ from airflow.exceptions import AirflowFailException
 from airflow.models.param import Param
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.context import get_current_context
+from airflow.utils.trigger_rule import TriggerRule
 
 from common.notifications import sla_miss_callback, task_failure_callback
+from common.run_metadata import (
+    build_metadata_path,
+    derive_overall_status,
+    summarize_task_states,
+    write_json_record,
+)
 
 LOGGER = logging.getLogger("airflow.environment_promotion")
 
@@ -49,33 +55,6 @@ def _s3_prefix_exists(path_value: str) -> bool:
     s3 = boto3.client("s3")
     response = s3.list_objects_v2(Bucket=bucket, Prefix=prefix, MaxKeys=1)
     return response.get("KeyCount", 0) > 0
-
-
-def _write_promotion_record(record: dict[str, Any], output_path: str) -> None:
-    if output_path.startswith("s3://"):
-        parsed = urlparse(output_path)
-        bucket = parsed.netloc
-        key = parsed.path.lstrip("/")
-
-        try:
-            import boto3
-        except ImportError as exc:  # pragma: no cover
-            raise AirflowFailException(
-                "boto3 is required to write s3:// promotion records."
-            ) from exc
-
-        s3 = boto3.client("s3")
-        s3.put_object(
-            Bucket=bucket,
-            Key=key,
-            Body=json.dumps(record, separators=(",", ":")).encode("utf-8"),
-            ContentType="application/json",
-        )
-        return
-
-    destination = Path(output_path)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(record, indent=2), encoding="utf-8")
 
 
 @dag(
@@ -216,16 +195,54 @@ def retail_environment_promotion_workflow() -> None:
             "promoted_at_utc": datetime.now(timezone.utc).isoformat(),
             "artifact_path": payload["artifact_path"],
         }
-        _write_promotion_record(record, output_path)
+        write_json_record(record, output_path)
+
+    @task(task_id="publish_run_metadata", trigger_rule=TriggerRule.ALL_DONE)
+    def publish_run_metadata() -> None:
+        context = get_current_context()
+        dag_run = context["dag_run"]
+        params = context["params"]
+
+        task_states = summarize_task_states(
+            dag_run,
+            exclude_task_ids={"start", "finish", "publish_run_metadata"},
+        )
+        status = derive_overall_status(task_states)
+
+        metadata_template = os.getenv(
+            "AIRFLOW_RUN_METADATA_PATH_TEMPLATE",
+            "data/ops/run_metadata/{dag_id}/ds={ds}/{run_id_safe}.json",
+        )
+        metadata_path = build_metadata_path(metadata_template, context)
+        logical_date = context.get("logical_date")
+
+        record = {
+            "dag_id": context["dag"].dag_id,
+            "run_id": context["run_id"],
+            "status": status,
+            "event_timestamp_utc": pendulum.now("UTC").isoformat(),
+            "logical_date_utc": logical_date.isoformat() if logical_date else None,
+            "source_env": params.get("source_env"),
+            "target_env": params.get("target_env"),
+            "release_version": params.get("release_version"),
+            "task_states": task_states,
+        }
+        write_json_record(record, metadata_path)
+        LOGGER.info(
+            "Published promotion run metadata status=%s output_path=%s",
+            status,
+            metadata_path,
+        )
 
     validated = validate_promotion_request()
     dependency_checked = check_dependency_artifact(validated)
     built = run_dbt_build(dependency_checked)
     scanned = run_quality_observability_scan(built)
     published = publish_promotion_record(scanned)
+    metadata = publish_run_metadata()
 
-    start >> validated >> dependency_checked >> built >> scanned >> published >> finish
+    start >> validated >> dependency_checked >> built >> scanned >> published
+    [validated, dependency_checked, built, scanned, published] >> metadata >> finish
 
 
 dag: Any = retail_environment_promotion_workflow()
-

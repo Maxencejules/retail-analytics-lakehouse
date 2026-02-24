@@ -50,6 +50,7 @@ Exit criteria:
 Artifacts:
 - [batch_etl_orchestration.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/batch_etl_orchestration.py)
 - [environment_promotion_workflow.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/environment_promotion_workflow.py)
+- [run_metadata.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/common/run_metadata.py)
 
 Implemented capabilities:
 - Retry policies and backfill support (`catchup=True`) for batch ETL.
@@ -57,6 +58,7 @@ Implemented capabilities:
 - SLA miss and task-failure notifications via webhook callback.
 - Promotion workflow with environment ordering gates (`dev -> stage -> prod`).
 - Promotion gates require dbt build success and Soda quality checks.
+- Run metadata publication for both batch and promotion DAG runs on success/failure paths.
 
 ## 2. dbt Warehouse Layer
 

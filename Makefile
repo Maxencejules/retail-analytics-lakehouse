@@ -52,6 +52,7 @@ ci: lint test-unit test-integration
 
 airflow-dag-validate:
 >$(PY) -m py_compile infra/airflow/dags/common/notifications.py \
+>	infra/airflow/dags/common/run_metadata.py \
 >	infra/airflow/dags/batch_etl_orchestration.py \
 >	infra/airflow/dags/environment_promotion_workflow.py
 

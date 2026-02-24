@@ -69,3 +69,4 @@ make soda-scan TARGET_ENV=dev
 - **Airflow DAG validation** catches orchestration syntax regressions before deployment.
 - **dbt build discipline** enforces model tests and lineage consistency before environment promotion.
 - **Soda alert routing** creates fast feedback for production data quality incidents.
+- **Run metadata artifacts** provide auditable DAG run traces for incident response and release governance.

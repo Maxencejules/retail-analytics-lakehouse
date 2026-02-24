@@ -15,8 +15,15 @@ from airflow.decorators import dag, task
 from airflow.exceptions import AirflowFailException
 from airflow.operators.empty import EmptyOperator
 from airflow.utils.context import get_current_context
+from airflow.utils.trigger_rule import TriggerRule
 
 from common.notifications import sla_miss_callback, task_failure_callback
+from common.run_metadata import (
+    build_metadata_path,
+    derive_overall_status,
+    summarize_task_states,
+    write_json_record,
+)
 
 LOGGER = logging.getLogger("airflow.batch_etl_orchestration")
 
@@ -172,13 +179,65 @@ def retail_batch_etl_orchestration() -> None:
         LOGGER.info("Running quality scan command: %s", " ".join(scan_command))
         subprocess.run(scan_command, cwd=str(repo_root), check=True)
 
+    @task(task_id="publish_run_metadata", trigger_rule=TriggerRule.ALL_DONE)
+    def publish_run_metadata() -> None:
+        context = get_current_context()
+        dag_run = context["dag_run"]
+        ds = context["ds"]
+
+        task_states = summarize_task_states(
+            dag_run,
+            exclude_task_ids={"start", "finish", "publish_run_metadata"},
+        )
+        status = derive_overall_status(task_states)
+
+        metadata_template = os.getenv(
+            "AIRFLOW_RUN_METADATA_PATH_TEMPLATE",
+            "data/ops/run_metadata/{dag_id}/ds={ds}/{run_id_safe}.json",
+        )
+        metadata_path = build_metadata_path(metadata_template, context)
+
+        input_template = os.getenv(
+            "AIRFLOW_RAW_INPUT_PATH_TEMPLATE",
+            "data/generated/transactions.csv.gz",
+        )
+        output_base_path = os.getenv("AIRFLOW_OUTPUT_BASE_PATH", "data/lakehouse")
+        data_interval_start = context.get("data_interval_start")
+        data_interval_end = context.get("data_interval_end")
+        logical_date = context.get("logical_date")
+
+        record = {
+            "dag_id": context["dag"].dag_id,
+            "run_id": context["run_id"],
+            "status": status,
+            "event_timestamp_utc": pendulum.now("UTC").isoformat(),
+            "logical_date_utc": logical_date.isoformat() if logical_date else None,
+            "data_interval_start_utc": (
+                data_interval_start.isoformat() if data_interval_start else None
+            ),
+            "data_interval_end_utc": (
+                data_interval_end.isoformat() if data_interval_end else None
+            ),
+            "ingestion_date": ds,
+            "input_path": input_template.format(ds=ds),
+            "output_base_path": output_base_path,
+            "task_states": task_states,
+        }
+        write_json_record(record, metadata_path)
+        LOGGER.info(
+            "Published run metadata status=%s output_path=%s",
+            status,
+            metadata_path,
+        )
+
     checked_input = dependency_check()
     batch_task = run_batch_etl(checked_input)
     validated = validate_gold_outputs()
     quality = run_data_quality_scan()
+    metadata = publish_run_metadata()
 
-    start >> checked_input >> batch_task >> validated >> quality >> finish
+    start >> checked_input >> batch_task >> validated >> quality
+    [checked_input, batch_task, validated, quality] >> metadata >> finish
 
 
 dag: Any = retail_batch_etl_orchestration()
-

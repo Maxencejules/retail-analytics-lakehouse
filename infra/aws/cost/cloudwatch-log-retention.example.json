@@ -1,0 +1,16 @@
+{
+  "log_groups": [
+    {
+      "name": "/retail-analytics/airflow",
+      "retention_days": 90
+    },
+    {
+      "name": "/retail-analytics/spark",
+      "retention_days": 90
+    },
+    {
+      "name": "/retail-analytics/security-audit",
+      "retention_days": 365
+    }
+  ]
+}

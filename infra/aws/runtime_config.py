@@ -14,6 +14,8 @@ class AwsLakehouseConfig:
     region: str
     bucket: str
     prefix: str
+    spark_workload_profile: str
+    compaction_target_file_size_mb: int
     profile: str | None = None
 
     @classmethod
@@ -22,11 +24,21 @@ class AwsLakehouseConfig:
         if not bucket:
             raise ValueError("LAKEHOUSE_BUCKET is required")
 
+        raw_compaction_size = os.getenv("COMPACTION_TARGET_FILE_SIZE_MB", "256").strip()
+        try:
+            compaction_target_file_size_mb = int(raw_compaction_size)
+        except ValueError as exc:
+            raise ValueError("COMPACTION_TARGET_FILE_SIZE_MB must be an integer") from exc
+        if compaction_target_file_size_mb <= 0:
+            raise ValueError("COMPACTION_TARGET_FILE_SIZE_MB must be > 0")
+
         return cls(
             environment=os.getenv("APP_ENV", "dev").strip(),
             region=os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "ca-central-1")).strip(),
             bucket=bucket,
             prefix=os.getenv("LAKEHOUSE_PREFIX", "").strip().strip("/"),
+            spark_workload_profile=os.getenv("SPARK_WORKLOAD_PROFILE", "balanced").strip(),
+            compaction_target_file_size_mb=compaction_target_file_size_mb,
             profile=os.getenv("AWS_PROFILE", "").strip() or None,
         )
 
@@ -56,4 +68,3 @@ def build_boto3_session(config: AwsLakehouseConfig):
         profile_name=config.profile,
         region_name=config.region,
     )
-

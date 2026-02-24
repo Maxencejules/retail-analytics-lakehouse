@@ -1,0 +1,39 @@
+{
+  "budget_name": "retail-lakehouse-monthly",
+  "time_unit": "MONTHLY",
+  "budget_type": "COST",
+  "limit_amount_usd": 18000,
+  "cost_filters": {
+    "Service": [
+      "Amazon Simple Storage Service",
+      "Amazon Redshift",
+      "Amazon EMR"
+    ]
+  },
+  "notifications": [
+    {
+      "threshold_percent": 70,
+      "comparison_operator": "GREATER_THAN",
+      "notification_type": "ACTUAL",
+      "subscriber_sns_arns": [
+        "arn:aws:sns:ca-central-1:123456789012:retail-cost-alerts"
+      ]
+    },
+    {
+      "threshold_percent": 85,
+      "comparison_operator": "GREATER_THAN",
+      "notification_type": "ACTUAL",
+      "subscriber_sns_arns": [
+        "arn:aws:sns:ca-central-1:123456789012:retail-cost-alerts"
+      ]
+    },
+    {
+      "threshold_percent": 95,
+      "comparison_operator": "GREATER_THAN",
+      "notification_type": "FORECASTED",
+      "subscriber_sns_arns": [
+        "arn:aws:sns:ca-central-1:123456789012:retail-cost-alerts"
+      ]
+    }
+  ]
+}

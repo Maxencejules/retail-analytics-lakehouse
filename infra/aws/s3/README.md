@@ -21,3 +21,5 @@ This repository includes local placeholders for:
 - `infra/aws/s3/silver/`
 - `infra/aws/s3/gold/`
 
+Lifecycle reference for Phase 3 cost optimization:
+- [lifecycle/lakehouse-lifecycle-policy.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/s3/lifecycle/lakehouse-lifecycle-policy.example.json)

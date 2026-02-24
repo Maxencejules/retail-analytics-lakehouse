@@ -1,0 +1,76 @@
+{
+  "Rules": [
+    {
+      "ID": "bronze-transition-and-expiration",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "bronze/"
+      },
+      "Transitions": [
+        {
+          "Days": 30,
+          "StorageClass": "STANDARD_IA"
+        },
+        {
+          "Days": 90,
+          "StorageClass": "GLACIER"
+        }
+      ],
+      "Expiration": {
+        "Days": 730
+      }
+    },
+    {
+      "ID": "silver-transition",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "silver/"
+      },
+      "Transitions": [
+        {
+          "Days": 60,
+          "StorageClass": "STANDARD_IA"
+        }
+      ],
+      "Expiration": {
+        "Days": 365
+      }
+    },
+    {
+      "ID": "gold-retention",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "gold/"
+      },
+      "Transitions": [
+        {
+          "Days": 120,
+          "StorageClass": "STANDARD_IA"
+        }
+      ],
+      "Expiration": {
+        "Days": 365
+      }
+    },
+    {
+      "ID": "checkpoint-and-quarantine-retention",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "_checkpoints/"
+      },
+      "Expiration": {
+        "Days": 30
+      }
+    },
+    {
+      "ID": "quarantine-retention",
+      "Status": "Enabled",
+      "Filter": {
+        "Prefix": "_quarantine/"
+      },
+      "Expiration": {
+        "Days": 45
+      }
+    }
+  ]
+}

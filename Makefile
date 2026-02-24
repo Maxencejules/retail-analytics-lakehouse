@@ -21,7 +21,8 @@ PY := $(VENV_BIN)/python
 
 .PHONY: init format lint test-unit test-integration test precommit ci clean \
 	airflow-dag-validate dbt-build dbt-docs soda-scan monitoring-up monitoring-down \
-	dbt-source-freshness dbt-phase2-gate dbt-governance-validate platform-check
+	dbt-source-freshness dbt-phase2-gate dbt-governance-validate \
+	compact-lakehouse phase3-policy-validate phase3-gate platform-check
 
 init:
 >$(PYTHON) -m venv $(VENV)
@@ -54,7 +55,8 @@ airflow-dag-validate:
 >$(PY) -m py_compile infra/airflow/dags/common/notifications.py \
 >	infra/airflow/dags/common/run_metadata.py \
 >	infra/airflow/dags/batch_etl_orchestration.py \
->	infra/airflow/dags/environment_promotion_workflow.py
+>	infra/airflow/dags/environment_promotion_workflow.py \
+>	infra/airflow/dags/cost_performance_optimization.py
 
 dbt-build:
 >$(DBT) build --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET)
@@ -72,6 +74,14 @@ dbt-phase2-gate:
 
 dbt-governance-validate:
 >$(PY) scripts/validate_dbt_governance.py --repo-root .
+
+compact-lakehouse:
+>$(PY) spark/optimization/compact_tables.py --base-path data/lakehouse --table-format parquet --target-file-size-mb 256
+
+phase3-policy-validate:
+>$(PY) scripts/validate_phase3_policies.py --repo-root .
+
+phase3-gate: phase3-policy-validate compact-lakehouse
 
 soda-scan:
 >$(PY) scripts/run_soda_scan.py --configuration $(SODA_CONFIG) --checks $(SODA_CHECKS) --target $(TARGET_ENV)

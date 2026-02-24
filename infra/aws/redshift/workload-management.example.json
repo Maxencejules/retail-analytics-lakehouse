@@ -1,0 +1,54 @@
+{
+  "wlm_json_configuration": [
+    {
+      "name": "critical_dashboards",
+      "user_group": ["bi_critical"],
+      "query_group": ["critical"],
+      "query_concurrency": 5,
+      "memory_percent_to_use": 35,
+      "concurrency_scaling": "auto",
+      "rules": [
+        {
+          "rule_name": "abort_long_running_critical",
+          "predicate": [
+            {
+              "metric_name": "query_execution_time",
+              "operator": ">",
+              "value": 900
+            }
+          ],
+          "action": "abort"
+        }
+      ]
+    },
+    {
+      "name": "etl_batch",
+      "user_group": ["etl_jobs"],
+      "query_group": ["etl"],
+      "query_concurrency": 3,
+      "memory_percent_to_use": 40,
+      "concurrency_scaling": "off",
+      "rules": [
+        {
+          "rule_name": "hop_high_queue_wait",
+          "predicate": [
+            {
+              "metric_name": "query_queue_time",
+              "operator": ">",
+              "value": 120
+            }
+          ],
+          "action": "hop"
+        }
+      ]
+    },
+    {
+      "name": "ad_hoc",
+      "user_group": ["analyst_ad_hoc"],
+      "query_group": ["adhoc"],
+      "query_concurrency": 2,
+      "memory_percent_to_use": 25,
+      "concurrency_scaling": "off"
+    }
+  ]
+}

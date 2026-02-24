@@ -39,6 +39,7 @@ Guidelines:
 - Keep only non-secret settings in env files (region, bucket, prefixes, profile).
 - Never commit access keys or secret values.
 - Use separate AWS profiles and buckets per environment.
+- Set Spark workload profile controls per environment (`SPARK_WORKLOAD_PROFILE`, executor bounds).
 
 Runtime helper:
 - [runtime_config.py](C:/Users/USER/retail-analytics-lakehouse/infra/aws/runtime_config.py)
@@ -87,6 +88,20 @@ Notes:
 - Right-size Spark clusters and prefer autoscaling for batch workloads.
 - Enforce partition pruning by date in all major queries.
 
+Phase 3 policy templates:
+- S3 lifecycle: [lakehouse-lifecycle-policy.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/s3/lifecycle/lakehouse-lifecycle-policy.example.json)
+- Spark adaptive scaling: [adaptive-scaling-policy.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/spark/adaptive-scaling-policy.example.json)
+- Redshift workload management: [workload-management.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/redshift/workload-management.example.json)
+- Budget alerts: [budget-alerts.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/cost/budget-alerts.example.json)
+- Log retention: [cloudwatch-log-retention.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/cost/cloudwatch-log-retention.example.json)
+
+Validation + automation commands:
+
+```bash
+make phase3-policy-validate
+make compact-lakehouse
+```
+
 ## 7. Security Best Practices
 
 - Enforce least privilege IAM for each workload role.
@@ -106,4 +121,3 @@ Never hardcode secrets in:
 - CI pipeline definitions
 
 Always inject secrets at runtime from approved secret-management services.
-

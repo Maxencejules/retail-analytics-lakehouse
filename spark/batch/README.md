@@ -45,3 +45,13 @@ python spark/batch/run_pipeline.py \
 - Disable fail-fast only for controlled backfill investigations:
   - `--no-fail-fast-quality`
 
+## Adaptive Scaling Profile
+
+Batch Spark sessions use shared workload profiles:
+- `SPARK_WORKLOAD_PROFILE=cost_saver|balanced|high_throughput`
+- `SPARK_MIN_EXECUTORS`
+- `SPARK_INITIAL_EXECUTORS`
+- `SPARK_MAX_EXECUTORS`
+- `SPARK_SHUFFLE_PARTITIONS`
+
+This supports Phase 3 cost/performance control without code changes per environment.

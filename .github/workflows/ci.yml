@@ -44,6 +44,9 @@ jobs:
       - name: Validate dbt governance contracts
         run: make dbt-governance-validate
 
+      - name: Validate Phase 3 policy artifacts
+        run: make phase3-policy-validate
+
       - name: Run unit tests
         run: make test-unit
 

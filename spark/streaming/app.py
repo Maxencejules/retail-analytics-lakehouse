@@ -20,6 +20,7 @@ from pyspark.sql.types import (
     StructField,
     StructType,
 )
+from spark.common.performance import SparkPerformanceProfile, apply_performance_profile
 
 LOGGER = logging.getLogger("spark.streaming.transactions")
 
@@ -115,12 +116,16 @@ def configure_logging(level: str) -> None:
 
 
 def build_spark_session(app_name: str) -> SparkSession:
-    return (
+    profile = SparkPerformanceProfile.from_env()
+    builder = (
         SparkSession.builder.appName(app_name)
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.streaming.metricsEnabled", "true")
-        .getOrCreate()
     )
+    builder = apply_performance_profile(builder, profile)
+    spark = builder.getOrCreate()
+    LOGGER.info("spark_performance_profile_applied %s", profile.as_dict())
+    return spark
 
 
 def is_delta_runtime_ready(spark: SparkSession) -> bool:

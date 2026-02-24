@@ -20,6 +20,7 @@ End-to-end flow:
 Detailed architecture reference:
 - [architecture.md](C:/Users/USER/retail-analytics-lakehouse/docs/architecture.md)
 - [platform-evolution.md](C:/Users/USER/retail-analytics-lakehouse/docs/platform-evolution.md)
+- [cost-performance.md](C:/Users/USER/retail-analytics-lakehouse/docs/cost-performance.md)
 
 ## Core Platform Additions
 
@@ -37,6 +38,9 @@ Detailed architecture reference:
 - Data-quality observability:
   - [quality/soda](C:/Users/USER/retail-analytics-lakehouse/quality/soda/README.md)
   - Alert routing via webhook and optional SNS.
+- Cost/performance automation:
+  - [spark/optimization](C:/Users/USER/retail-analytics-lakehouse/spark/optimization/README.md)
+  - Automated compaction + adaptive scaling + workload policy validation gates.
 
 ## Local Development
 
@@ -70,6 +74,8 @@ pip install -r requirements-quality.txt
 make dbt-build DBT_TARGET=dev
 make dbt-docs DBT_TARGET=dev
 make dbt-governance-validate
+make phase3-policy-validate
+make compact-lakehouse
 make soda-scan TARGET_ENV=dev
 make monitoring-up
 ```

@@ -16,18 +16,22 @@ from spark.batch.transforms import (
     prepare_bronze,
     transform_bronze_to_silver,
 )
+from spark.common.performance import SparkPerformanceProfile, apply_performance_profile
 
 LOGGER = logging.getLogger("spark.batch.pipeline")
 
 
 def build_spark_session(config: PipelineConfig) -> SparkSession:
-    spark = (
+    profile = SparkPerformanceProfile.from_env()
+    builder = (
         SparkSession.builder.appName(config.app_name)
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
-        .getOrCreate()
     )
+    builder = apply_performance_profile(builder, profile)
+    spark = builder.getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
+    LOGGER.info("spark_performance_profile_applied %s", profile.as_dict())
     return spark
 
 
@@ -147,4 +151,3 @@ def run_pipeline(config: PipelineConfig) -> None:
         )
     finally:
         spark.stop()
-

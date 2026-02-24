@@ -9,8 +9,9 @@ It runs these stages in order:
 1. Pre-commit checks
 2. Lint checks
 3. dbt governance contract validation
-4. Unit tests
-5. Integration test:
+4. Phase 3 policy artifact validation
+5. Unit tests
+6. Integration test:
    - generate 1,000 synthetic transactions
    - run batch ETL
    - validate Gold outputs exist and contain rows
@@ -34,6 +35,8 @@ Main targets:
 - `make dbt-source-freshness DBT_TARGET=dev`: enforce source freshness SLAs.
 - `make dbt-phase2-gate DBT_TARGET=dev`: run governed build + freshness + docs gate.
 - `make dbt-governance-validate`: enforce semantic/exposure/governance contract metadata.
+- `make phase3-policy-validate`: validate compaction/scaling/WLM/lifecycle/budget policy artifacts.
+- `make compact-lakehouse`: run Spark compaction for Silver/Gold targets.
 - `make soda-scan TARGET_ENV=dev`: run Soda quality checks and alert on failure.
 - `make monitoring-up` / `make monitoring-down`: control local Prometheus/Grafana/Marquez stack.
 
@@ -63,6 +66,7 @@ make dbt-build DBT_TARGET=dev
 make dbt-source-freshness DBT_TARGET=dev
 make dbt-phase2-gate DBT_TARGET=dev
 make dbt-governance-validate
+make phase3-policy-validate
 make soda-scan TARGET_ENV=dev
 ```
 
@@ -77,5 +81,6 @@ make soda-scan TARGET_ENV=dev
 - **dbt build discipline** enforces model tests and lineage consistency before environment promotion.
 - **dbt freshness + governance selectors** prevent stale or out-of-scope assets from promotion.
 - **dbt governance validation** enforces semantic-layer and exposure ownership contracts in CI.
+- **Phase 3 policy validation** prevents invalid cost/performance controls from deployment.
 - **Soda alert routing** creates fast feedback for production data quality incidents.
 - **Run metadata artifacts** provide auditable DAG run traces for incident response and release governance.

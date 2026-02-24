@@ -21,6 +21,12 @@ This directory contains Airflow DAGs for production workflow orchestration.
   - Soda quality scan gate
   - Promotion record publishing
 
+- [cost_performance_optimization.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/cost_performance_optimization.py)
+  - Scheduled Phase 3 optimization run
+  - Policy artifact validation gate
+  - Silver/Gold compaction execution
+  - Run metadata publication
+
 Shared callbacks:
 - [notifications.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/common/notifications.py)
 - [run_metadata.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/common/run_metadata.py)
@@ -34,6 +40,9 @@ Shared callbacks:
 - `AIRFLOW_RAW_INPUT_PATH_TEMPLATE`
 - `AIRFLOW_PROMOTION_ARTIFACT_TEMPLATE`
 - `AIRFLOW_PROMOTION_RECORD_TEMPLATE`
+- `AIRFLOW_COMPACTION_DATASETS`
+- `AIRFLOW_COMPACTION_TARGET_FILE_SIZE_MB`
+- `SPARK_WORKLOAD_PROFILE`
 - `AIRFLOW_RUN_METADATA_PATH_TEMPLATE`
 - `AIRFLOW_ALERT_WEBHOOK_URL`
 - `AIRFLOW_ALERT_SNS_TOPIC_ARN`

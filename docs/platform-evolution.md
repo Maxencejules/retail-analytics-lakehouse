@@ -110,6 +110,8 @@ Implemented capabilities:
 ```bash
 make airflow-dag-validate
 make dbt-build DBT_TARGET=dev
+make phase3-policy-validate
+make compact-lakehouse
 make soda-scan TARGET_ENV=dev
 make monitoring-up
 ```
@@ -120,3 +122,23 @@ make monitoring-up
 2. Pass dbt build/tests in target environment.
 3. Pass Soda quality scan in target environment.
 4. Publish promotion record artifact with timestamp and release version.
+
+## 7. Cost/Performance Automation (Phase 3)
+
+Artifacts:
+- [compact_tables.py](C:/Users/USER/retail-analytics-lakehouse/spark/optimization/compact_tables.py)
+- [performance.py](C:/Users/USER/retail-analytics-lakehouse/spark/common/performance.py)
+- [cost_performance_optimization.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/cost_performance_optimization.py)
+- [adaptive-scaling-policy.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/spark/adaptive-scaling-policy.example.json)
+- [workload-management.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/redshift/workload-management.example.json)
+- [lakehouse-lifecycle-policy.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/s3/lifecycle/lakehouse-lifecycle-policy.example.json)
+- [budget-alerts.example.json](C:/Users/USER/retail-analytics-lakehouse/infra/aws/cost/budget-alerts.example.json)
+- [validate_phase3_policies.py](C:/Users/USER/retail-analytics-lakehouse/scripts/validate_phase3_policies.py)
+
+Implemented capabilities:
+- Automated compaction workflow for Silver/Gold to reduce small-file inefficiency.
+- Adaptive Spark scaling profiles (`cost_saver`, `balanced`, `high_throughput`) with environment overrides.
+- Redshift workload policy templates for queue isolation, concurrency control, and runaway query handling.
+- S3 lifecycle templates for storage tiering and retention enforcement across Bronze/Silver/Gold.
+- Budget and log-retention templates with CI validation guardrails.
+- Airflow-scheduled optimization DAG with policy validation, compaction execution, and run metadata publication.

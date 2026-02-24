@@ -86,3 +86,9 @@ spark-submit \
   - Kafka topic partitions
   - cluster autoscaling policies
 
+Phase 3 adaptive scaling controls are supported through shared profile environment variables:
+- `SPARK_WORKLOAD_PROFILE=cost_saver|balanced|high_throughput`
+- `SPARK_MIN_EXECUTORS`
+- `SPARK_INITIAL_EXECUTORS`
+- `SPARK_MAX_EXECUTORS`
+- `SPARK_SHUFFLE_PARTITIONS`

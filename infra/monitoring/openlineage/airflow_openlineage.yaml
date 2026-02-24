@@ -1,0 +1,9 @@
+openlineage:
+  transport:
+    type: http
+    url: http://marquez:5000/api/v1/lineage
+    timeout: 30
+  namespace: retail-analytics-lakehouse
+  disable_source_code: false
+  include_full_task_info: true
+

@@ -1,0 +1,9 @@
+"data_source retail_warehouse":
+  type: postgres
+  host: ${WAREHOUSE_HOST}
+  port: ${WAREHOUSE_PORT}
+  username: ${WAREHOUSE_USER}
+  password: ${WAREHOUSE_PASSWORD}
+  database: ${WAREHOUSE_DB}
+  schema: ${WAREHOUSE_SCHEMA}
+

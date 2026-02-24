@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: Customer dimension with deterministic surrogate key.
+    columns:
+      - name: customer_sk
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_product
+    description: Product dimension with deterministic surrogate key.
+    columns:
+      - name: product_sk
+        tests:
+          - not_null
+          - unique
+      - name: product_id
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_store
+    description: Store dimension with deterministic surrogate key.
+    columns:
+      - name: store_sk
+        tests:
+          - not_null
+          - unique
+      - name: store_id
+        tests:
+          - not_null
+          - unique
+
+  - name: dim_time
+    description: Calendar time dimension by date.
+    columns:
+      - name: time_sk
+        tests:
+          - not_null
+          - unique
+      - name: full_date
+        tests:
+          - not_null
+          - unique
+
+  - name: fact_sales
+    description: Fact table at one row per transaction.
+    columns:
+      - name: transaction_id
+        tests:
+          - not_null
+          - unique
+      - name: time_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_time')
+              field: time_sk
+      - name: customer_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_sk
+      - name: product_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_sk
+      - name: store_sk
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_store')
+              field: store_sk
+      - name: quantity
+        tests:
+          - not_null
+          - non_negative
+      - name: revenue
+        tests:
+          - not_null
+          - non_negative
+      - name: unit_price
+        tests:
+          - not_null
+          - non_negative
+      - name: channel
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["online", "store"]
+

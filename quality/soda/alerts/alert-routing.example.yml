@@ -1,0 +1,7 @@
+alert_routing:
+  webhook_url_env: SODA_ALERT_WEBHOOK_URL
+  severity_threshold: warning
+  channels:
+    - slack:data-quality-alerts
+    - pagerduty:data-platform-oncall
+

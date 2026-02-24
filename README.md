@@ -1,20 +1,41 @@
 # Retail Analytics Lakehouse
 
-A lightweight monorepo scaffold for a retail data engineering lakehouse.
+Production-oriented monorepo for a retail analytics lakehouse platform.
 
 ## Architecture Overview
 
-- `infra/`: Infrastructure as code, environment provisioning, and platform setup.
-- `ingestion/`: Source connectors and raw data ingestion pipelines.
-- `spark/`: Spark-based transformation and enrichment jobs.
-- `warehouse/`: Curated warehouse models, SQL transformations, and marts.
-- `dashboard/`: BI layer assets and dashboard definitions.
-- `docs/`: Architecture notes, runbooks, and operational docs.
-- `scripts/`: Developer and CI helper scripts.
-- `tests/`: Unit, integration, and data quality tests.
+- `infra/`: AWS, Airflow orchestration, monitoring, and operational infrastructure.
+- `ingestion/`: Synthetic transaction generator and ingestion utilities.
+- `spark/`: Batch and streaming PySpark pipelines for Bronze/Silver/Gold processing.
+- `warehouse/`: Postgres star schema SQL and dbt transformation project.
+- `dashboard/`: Executive KPI dashboard and data access abstractions.
+- `quality/`: Soda data-quality observability checks and alerting config.
+- `docs/`: Architecture, setup guides, and CI/CD runbooks.
+- `scripts/`: Automation helpers (integration tests, quality scan runners).
+- `tests/`: Unit and pipeline transformation tests.
 
-Data flow:
-`Sources -> ingestion -> bronze/silver (spark) -> warehouse (gold) -> dashboard`
+End-to-end flow:
+`sources -> ingestion -> bronze/silver/gold lakehouse -> warehouse/dbt marts -> dashboard`
+
+Detailed architecture reference:
+- [architecture.md](C:/Users/USER/retail-analytics-lakehouse/docs/architecture.md)
+- [platform-evolution.md](C:/Users/USER/retail-analytics-lakehouse/docs/platform-evolution.md)
+
+## Core Platform Additions
+
+- Airflow orchestration:
+  - [infra/airflow](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/README.md)
+  - Batch DAG includes retries, backfills, dependency checks, and SLA miss notifications.
+  - Promotion DAG enforces `dev -> stage -> prod` gates with dbt + Soda checks.
+- dbt warehouse discipline:
+  - [warehouse/dbt](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/README.md)
+  - Staging, marts, and metric models with tests, docs, and lineage artifacts.
+- Monitoring stack:
+  - [infra/monitoring](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/README.md)
+  - CloudWatch + Prometheus/Grafana + OpenLineage/Marquez baseline.
+- Data-quality observability:
+  - [quality/soda](C:/Users/USER/retail-analytics-lakehouse/quality/soda/README.md)
+  - Alert routing via webhook and optional SNS.
 
 ## Local Development
 
@@ -22,6 +43,7 @@ Data flow:
 
 - Python 3.11
 - `make`
+- Docker (for Kafka/Spark and monitoring stack)
 - Git
 
 ### Setup
@@ -30,26 +52,29 @@ Data flow:
 make init
 ```
 
-### Common Commands
+### Daily Commands
 
 ```bash
 make format
 make lint
 make test
+make airflow-dag-validate
 ```
 
-### Pre-commit
+### Platform Operations
 
 ```bash
-pre-commit run --all-files
+pip install -r requirements-dbt.txt
+pip install -r requirements-quality.txt
+make dbt-build DBT_TARGET=dev
+make dbt-docs DBT_TARGET=dev
+make soda-scan TARGET_ENV=dev
+make monitoring-up
 ```
 
-## AWS Support
+## AWS and CI/CD
 
-- AWS setup guide: [docs/aws-setup.md](C:/Users/USER/retail-analytics-lakehouse/docs/aws-setup.md)
-- Spark Docker image: [Dockerfile.spark](C:/Users/USER/retail-analytics-lakehouse/Dockerfile.spark)
-- Local Docker stack: [docker-compose.yml](C:/Users/USER/retail-analytics-lakehouse/docker-compose.yml)
-
-## CI/CD
-
-- CI/CD and local quality checks: [docs/ci-cd.md](C:/Users/USER/retail-analytics-lakehouse/docs/ci-cd.md)
+- AWS setup: [docs/aws-setup.md](C:/Users/USER/retail-analytics-lakehouse/docs/aws-setup.md)
+- Spark container: [Dockerfile.spark](C:/Users/USER/retail-analytics-lakehouse/Dockerfile.spark)
+- Local data stack: [docker-compose.yml](C:/Users/USER/retail-analytics-lakehouse/docker-compose.yml)
+- CI/CD guide: [docs/ci-cd.md](C:/Users/USER/retail-analytics-lakehouse/docs/ci-cd.md)

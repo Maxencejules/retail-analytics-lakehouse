@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: staging
+    schema: staging
+    tables:
+      - name: sales_incremental
+      - name: customer_incremental
+      - name: product_incremental
+      - name: store_incremental
+

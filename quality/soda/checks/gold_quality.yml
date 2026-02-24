@@ -1,0 +1,29 @@
+checks for fact_sales:
+  - row_count > 0
+  - missing_count(transaction_id) = 0
+  - duplicate_count(transaction_id) = 0
+  - invalid_count(channel) = 0:
+      valid values:
+        - online
+        - store
+  - failed rows:
+      fail query: |
+        select *
+        from fact_sales
+        where quantity <= 0 or revenue < 0 or unit_price < 0
+
+checks for dim_customer:
+  - row_count > 0
+  - missing_count(customer_id) = 0
+  - duplicate_count(customer_id) = 0
+
+checks for dim_product:
+  - row_count > 0
+  - missing_count(product_id) = 0
+  - duplicate_count(product_id) = 0
+
+checks for dim_store:
+  - row_count > 0
+  - missing_count(store_id) = 0
+  - duplicate_count(store_id) = 0
+

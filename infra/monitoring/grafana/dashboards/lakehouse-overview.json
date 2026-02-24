@@ -1,0 +1,34 @@
+{
+  "id": null,
+  "uid": "lakehouse-overview",
+  "title": "Lakehouse Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Airflow Metrics Endpoint Availability",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "up{job=\"airflow-metrics\"}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Spark Metrics Endpoint Availability",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "up{job=\"spark-metrics\"}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
+

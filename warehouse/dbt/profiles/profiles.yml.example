@@ -1,0 +1,36 @@
+retail_analytics_warehouse:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5432
+      user: postgres
+      pass: postgres
+      dbname: retail_analytics
+      schema: warehouse
+      threads: 4
+      connect_timeout: 10
+
+    stage:
+      type: postgres
+      host: stage-db.internal
+      port: 5432
+      user: dbt_stage
+      pass: "{{ env_var('DBT_STAGE_PASSWORD') }}"
+      dbname: retail_analytics_stage
+      schema: warehouse
+      threads: 8
+      connect_timeout: 10
+
+    prod:
+      type: postgres
+      host: prod-db.internal
+      port: 5432
+      user: dbt_prod
+      pass: "{{ env_var('DBT_PROD_PASSWORD') }}"
+      dbname: retail_analytics_prod
+      schema: warehouse
+      threads: 12
+      connect_timeout: 10
+

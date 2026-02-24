@@ -1,0 +1,32 @@
+name: retail_analytics_warehouse
+version: 1.0.0
+config-version: 2
+
+profile: retail_analytics_warehouse
+
+model-paths:
+  - models
+macro-paths:
+  - macros
+
+target-path: target
+clean-targets:
+  - target
+  - dbt_packages
+  - logs
+
+models:
+  retail_analytics_warehouse:
+    +persist_docs:
+      relation: true
+      columns: true
+    staging:
+      +materialized: view
+      +schema: staging_analytics
+    marts:
+      +materialized: incremental
+      +schema: warehouse
+    metrics:
+      +materialized: table
+      +schema: analytics
+

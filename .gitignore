@@ -33,3 +33,10 @@ Thumbs.db
 data/
 artifacts/
 .tmp/
+
+# Airflow and dbt artifacts
+logs/
+warehouse/dbt/target/
+warehouse/dbt/logs/
+warehouse/dbt/dbt_packages/
+warehouse/dbt/profiles/profiles.yml

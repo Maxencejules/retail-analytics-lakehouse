@@ -1,0 +1,21 @@
+groups:
+  - name: lakehouse-alerts
+    rules:
+      - alert: AirflowSchedulerDown
+        expr: up{job="airflow-metrics"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Airflow metrics endpoint unavailable"
+          description: "Airflow metrics endpoint has been down for more than 5 minutes."
+
+      - alert: SparkMetricsUnavailable
+        expr: up{job="spark-metrics"} == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Spark metrics endpoint unavailable"
+          description: "Spark metrics endpoint has been down for more than 10 minutes."
+

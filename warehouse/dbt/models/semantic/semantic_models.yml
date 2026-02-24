@@ -1,0 +1,100 @@
+version: 2
+
+semantic_models:
+  - name: sem_sales
+    description: Semantic model for transaction-level sales facts.
+    model: ref('fact_sales')
+    defaults:
+      agg_time_dimension: ingestion_date
+    entities:
+      - name: transaction
+        type: primary
+        expr: transaction_id
+      - name: customer
+        type: foreign
+        expr: customer_sk
+      - name: product
+        type: foreign
+        expr: product_sk
+      - name: store
+        type: foreign
+        expr: store_sk
+    dimensions:
+      - name: ingestion_date
+        type: time
+        type_params:
+          time_granularity: day
+      - name: channel
+        type: categorical
+      - name: currency
+        type: categorical
+    measures:
+      - name: revenue
+        description: Gross sales revenue amount.
+        agg: sum
+        expr: revenue
+      - name: orders
+        description: Number of distinct orders.
+        agg: count_distinct
+        expr: transaction_id
+      - name: units_sold
+        description: Total sold units.
+        agg: sum
+        expr: quantity
+
+  - name: sem_store
+    description: Semantic model for store dimensions.
+    model: ref('dim_store')
+    entities:
+      - name: store
+        type: primary
+        expr: store_sk
+    dimensions:
+      - name: region
+        type: categorical
+      - name: province
+        type: categorical
+      - name: city
+        type: categorical
+      - name: store_format
+        type: categorical
+
+  - name: sem_product
+    description: Semantic model for product hierarchy.
+    model: ref('dim_product')
+    entities:
+      - name: product
+        type: primary
+        expr: product_sk
+    dimensions:
+      - name: category
+        type: categorical
+      - name: subcategory
+        type: categorical
+      - name: brand
+        type: categorical
+
+metrics:
+  - name: total_revenue
+    label: Total Revenue
+    description: Sum of transaction revenue across selected slices.
+    type: simple
+    type_params:
+      measure:
+        name: revenue
+
+  - name: total_orders
+    label: Total Orders
+    description: Distinct count of completed transactions.
+    type: simple
+    type_params:
+      measure:
+        name: orders
+
+  - name: total_units_sold
+    label: Total Units Sold
+    description: Sum of item quantities sold.
+    type: simple
+    type_params:
+      measure:
+        name: units_sold

@@ -3,6 +3,13 @@ version: 2
 models:
   - name: dim_customer
     description: Customer dimension with deterministic surrogate key.
+    config:
+      tags: ["governed", "phase2", "dimension"]
+      meta:
+        owner: analytics-engineering
+        data_tier: gold
+        contains_pii: true
+        pii_policy: masked_in_serving
     columns:
       - name: customer_sk
         tests:
@@ -12,9 +19,18 @@ models:
         tests:
           - not_null
           - unique
+      - name: customer_segment
+        tests:
+          - not_null
 
   - name: dim_product
     description: Product dimension with deterministic surrogate key.
+    config:
+      tags: ["governed", "phase2", "dimension"]
+      meta:
+        owner: analytics-engineering
+        data_tier: gold
+        contains_pii: false
     columns:
       - name: product_sk
         tests:
@@ -24,9 +40,18 @@ models:
         tests:
           - not_null
           - unique
+      - name: category
+        tests:
+          - not_null
 
   - name: dim_store
     description: Store dimension with deterministic surrogate key.
+    config:
+      tags: ["governed", "phase2", "dimension"]
+      meta:
+        owner: analytics-engineering
+        data_tier: gold
+        contains_pii: false
     columns:
       - name: store_sk
         tests:
@@ -36,9 +61,18 @@ models:
         tests:
           - not_null
           - unique
+      - name: region
+        tests:
+          - not_null
 
   - name: dim_time
     description: Calendar time dimension by date.
+    config:
+      tags: ["governed", "phase2", "dimension"]
+      meta:
+        owner: analytics-engineering
+        data_tier: gold
+        contains_pii: false
     columns:
       - name: time_sk
         tests:
@@ -48,9 +82,17 @@ models:
         tests:
           - not_null
           - unique
+          - not_future_date
 
   - name: fact_sales
     description: Fact table at one row per transaction.
+    config:
+      tags: ["governed", "phase2", "fact"]
+      meta:
+        owner: analytics-engineering
+        data_tier: gold
+        contains_pii: false
+        semantic_contract: retail_sales_v1
     columns:
       - name: transaction_id
         tests:
@@ -92,9 +134,17 @@ models:
         tests:
           - not_null
           - non_negative
+      - name: currency
+        tests:
+          - not_null
+          - accepted_values:
+              values: ["CAD", "USD"]
       - name: channel
         tests:
           - not_null
           - accepted_values:
               values: ["online", "store"]
-
+      - name: ingestion_date
+        tests:
+          - not_null
+          - not_future_date

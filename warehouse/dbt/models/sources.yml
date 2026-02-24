@@ -2,10 +2,50 @@ version: 2
 
 sources:
   - name: staging
+    description: Incremental staging tables loaded by Spark ingestion pipelines.
     schema: staging
+    loader: spark_batch_pipeline
+    freshness:
+      warn_after: {count: 6, period: hour}
+      error_after: {count: 24, period: hour}
     tables:
       - name: sales_incremental
+        description: Incremental transaction-level sales feed.
+        loaded_at_field: source_updated_at
+        columns:
+          - name: transaction_id
+            tests:
+              - not_null
+          - name: source_updated_at
+            tests:
+              - not_null
       - name: customer_incremental
+        description: Incremental customer reference changes.
+        loaded_at_field: source_updated_at
+        columns:
+          - name: customer_id
+            tests:
+              - not_null
+          - name: source_updated_at
+            tests:
+              - not_null
       - name: product_incremental
+        description: Incremental product catalog changes.
+        loaded_at_field: source_updated_at
+        columns:
+          - name: product_id
+            tests:
+              - not_null
+          - name: source_updated_at
+            tests:
+              - not_null
       - name: store_incremental
-
+        description: Incremental store master changes.
+        loaded_at_field: source_updated_at
+        columns:
+          - name: store_id
+            tests:
+              - not_null
+          - name: source_updated_at
+            tests:
+              - not_null

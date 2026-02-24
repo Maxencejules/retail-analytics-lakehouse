@@ -1,0 +1,15 @@
+selectors:
+  - name: phase2_governed_models
+    description: Models under governance controls for promotion gates.
+    definition:
+      method: tag
+      value: governed
+
+  - name: phase2_serving_scope
+    description: Governed models and downstream executive dashboard exposure.
+    definition:
+      union:
+        - method: tag
+          value: governed
+        - method: exposure
+          value: executive_retail_dashboard

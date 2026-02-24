@@ -1,6 +1,9 @@
 name: retail_analytics_warehouse
 version: 1.0.0
 config-version: 2
+require-dbt-version:
+  - ">=1.8.0"
+  - "<1.10.0"
 
 profile: retail_analytics_warehouse
 
@@ -20,13 +23,27 @@ models:
     +persist_docs:
       relation: true
       columns: true
+    +meta:
+      domain: retail_analytics
+      governance_framework: phase2
     staging:
       +materialized: view
       +schema: staging_analytics
+      +tags: ["staging", "phase2"]
+      +meta:
+        owner: data-platform
+        data_tier: silver
     marts:
       +materialized: incremental
       +schema: warehouse
+      +tags: ["governed", "gold", "phase2"]
+      +meta:
+        owner: analytics-engineering
+        data_tier: gold
     metrics:
       +materialized: table
       +schema: analytics
-
+      +tags: ["governed", "serving", "phase2"]
+      +meta:
+        owner: analytics-engineering
+        data_tier: serving

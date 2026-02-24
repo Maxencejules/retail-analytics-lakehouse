@@ -4,4 +4,4 @@ ruff==0.13.0
 pytest==8.3.3
 pyspark==3.5.1
 pyarrow==17.0.0
-
+PyYAML==6.0.2

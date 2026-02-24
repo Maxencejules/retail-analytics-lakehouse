@@ -30,7 +30,7 @@ Detailed architecture reference:
   - Run metadata artifacts are emitted for orchestration audit trails.
 - dbt warehouse discipline:
   - [warehouse/dbt](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/README.md)
-  - Staging, marts, and metric models with tests, docs, and lineage artifacts.
+  - Staging, marts, semantic/metric models, exposures, and governance selectors.
 - Monitoring stack:
   - [infra/monitoring](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/README.md)
   - CloudWatch + Prometheus/Grafana + OpenLineage/Marquez baseline.
@@ -69,6 +69,7 @@ pip install -r requirements-dbt.txt
 pip install -r requirements-quality.txt
 make dbt-build DBT_TARGET=dev
 make dbt-docs DBT_TARGET=dev
+make dbt-governance-validate
 make soda-scan TARGET_ENV=dev
 make monitoring-up
 ```

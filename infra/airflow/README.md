@@ -15,7 +15,9 @@ This directory contains Airflow DAGs for production workflow orchestration.
 - [environment_promotion_workflow.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/environment_promotion_workflow.py)
   - Controlled `dev -> stage -> prod` promotion workflow
   - Dependency artifact check
-  - dbt build gate
+  - dbt build gate using governance selector scope
+  - dbt source freshness gate
+  - dbt docs/lineage artifact generation gate
   - Soda quality scan gate
   - Promotion record publishing
 
@@ -27,6 +29,7 @@ Shared callbacks:
 
 - `AIRFLOW_REPO_ROOT`
 - `AIRFLOW_PYTHON_BIN`
+- `AIRFLOW_DBT_SELECTOR`
 - `AIRFLOW_OUTPUT_BASE_PATH`
 - `AIRFLOW_RAW_INPUT_PATH_TEMPLATE`
 - `AIRFLOW_PROMOTION_ARTIFACT_TEMPLATE`

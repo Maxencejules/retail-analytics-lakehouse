@@ -8,8 +8,9 @@ GitHub Actions workflow:
 It runs these stages in order:
 1. Pre-commit checks
 2. Lint checks
-3. Unit tests
-4. Integration test:
+3. dbt governance contract validation
+4. Unit tests
+5. Integration test:
    - generate 1,000 synthetic transactions
    - run batch ETL
    - validate Gold outputs exist and contain rows
@@ -30,6 +31,9 @@ Main targets:
 - `make airflow-dag-validate`: compile-check Airflow DAG Python files.
 - `make dbt-build DBT_TARGET=dev`: run dbt models + tests for a target.
 - `make dbt-docs DBT_TARGET=dev`: generate dbt docs/lineage artifacts.
+- `make dbt-source-freshness DBT_TARGET=dev`: enforce source freshness SLAs.
+- `make dbt-phase2-gate DBT_TARGET=dev`: run governed build + freshness + docs gate.
+- `make dbt-governance-validate`: enforce semantic/exposure/governance contract metadata.
 - `make soda-scan TARGET_ENV=dev`: run Soda quality checks and alert on failure.
 - `make monitoring-up` / `make monitoring-down`: control local Prometheus/Grafana/Marquez stack.
 
@@ -56,6 +60,9 @@ Run data-platform operational checks locally:
 pip install -r requirements-dbt.txt
 pip install -r requirements-quality.txt
 make dbt-build DBT_TARGET=dev
+make dbt-source-freshness DBT_TARGET=dev
+make dbt-phase2-gate DBT_TARGET=dev
+make dbt-governance-validate
 make soda-scan TARGET_ENV=dev
 ```
 
@@ -68,5 +75,7 @@ make soda-scan TARGET_ENV=dev
 - **Pre-commit parity** keeps local developer checks aligned with CI expectations, reducing merge-time surprises.
 - **Airflow DAG validation** catches orchestration syntax regressions before deployment.
 - **dbt build discipline** enforces model tests and lineage consistency before environment promotion.
+- **dbt freshness + governance selectors** prevent stale or out-of-scope assets from promotion.
+- **dbt governance validation** enforces semantic-layer and exposure ownership contracts in CI.
 - **Soda alert routing** creates fast feedback for production data quality incidents.
 - **Run metadata artifacts** provide auditable DAG run traces for incident response and release governance.

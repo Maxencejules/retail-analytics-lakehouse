@@ -65,11 +65,19 @@ Implemented capabilities:
 Artifacts:
 - [dbt_project.yml](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/dbt_project.yml)
 - [models](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/models)
+- [semantic_models.yml](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/models/semantic/semantic_models.yml)
+- [exposures.yml](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/models/exposures.yml)
+- [selectors.yml](C:/Users/USER/retail-analytics-lakehouse/warehouse/dbt/selectors.yml)
+- [validate_dbt_governance.py](C:/Users/USER/retail-analytics-lakehouse/scripts/validate_dbt_governance.py)
 
 Implemented capabilities:
 - Staging normalization models (`stg_*`) and star-schema marts (`dim_*`, `fact_sales`).
 - Metric-serving models for executive analytics.
-- Automated tests for uniqueness, referential integrity, accepted values, and non-negative measures.
+- Semantic model contracts and reusable metrics for governed downstream consumption.
+- Automated tests for uniqueness, referential integrity, freshness, accepted values, and measure sanity.
+- Exposure lineage mapping from marts to executive dashboard assets.
+- Selector-based governance scope (`phase2_governed_models`) for controlled promotion.
+- CI governance contract validation for semantic assets, exposures, tags, and model ownership metadata.
 - Environment-based targets for deployment discipline and controlled promotion.
 
 ## 3. Unified Monitoring Stack

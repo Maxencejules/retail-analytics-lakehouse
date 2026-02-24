@@ -1,0 +1,19 @@
+version: 2
+
+exposures:
+  - name: executive_retail_dashboard
+    label: Executive Retail Dashboard
+    description: Streamlit dashboard for leadership KPI tracking and trend analysis.
+    type: dashboard
+    maturity: high
+    url: https://internal.example.com/retail-analytics/dashboard
+    depends_on:
+      - ref('mrt_revenue_by_region')
+      - ref('mrt_top_products_last_30_days')
+      - ref('mrt_customer_segmentation')
+    owner:
+      name: BI Platform Team
+      email: bi-platform@retail-analytics.example
+    tags:
+      - governed
+      - phase2

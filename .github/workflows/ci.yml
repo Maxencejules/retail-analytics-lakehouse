@@ -41,9 +41,11 @@ jobs:
       - name: Run lint checks
         run: make lint
 
+      - name: Validate dbt governance contracts
+        run: make dbt-governance-validate
+
       - name: Run unit tests
         run: make test-unit
 
       - name: Run integration test (generator + batch ETL + Gold validation)
         run: make test-integration
-

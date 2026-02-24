@@ -148,7 +148,58 @@ def retail_environment_promotion_workflow() -> None:
             "--target",
             payload["target_env"],
         ]
+        dbt_selector = os.getenv("AIRFLOW_DBT_SELECTOR", "phase2_governed_models").strip()
+        if dbt_selector:
+            command.extend(["--selector", dbt_selector])
         LOGGER.info("Running dbt build command: %s", " ".join(command))
+        subprocess.run(command, cwd=str(repo_root), check=True)
+        return payload
+
+    @task(task_id="run_dbt_source_freshness")
+    def run_dbt_source_freshness(payload: dict[str, str]) -> dict[str, str]:
+        repo_root = Path(
+            os.getenv("AIRFLOW_REPO_ROOT", "/opt/retail-analytics-lakehouse")
+        )
+        if not repo_root.exists():
+            repo_root = Path.cwd()
+
+        dbt_bin = os.getenv("AIRFLOW_DBT_BIN", "dbt")
+        command = [
+            dbt_bin,
+            "source",
+            "freshness",
+            "--project-dir",
+            "warehouse/dbt",
+            "--profiles-dir",
+            "warehouse/dbt/profiles",
+            "--target",
+            payload["target_env"],
+        ]
+        LOGGER.info("Running dbt source freshness command: %s", " ".join(command))
+        subprocess.run(command, cwd=str(repo_root), check=True)
+        return payload
+
+    @task(task_id="run_dbt_docs_generate")
+    def run_dbt_docs_generate(payload: dict[str, str]) -> dict[str, str]:
+        repo_root = Path(
+            os.getenv("AIRFLOW_REPO_ROOT", "/opt/retail-analytics-lakehouse")
+        )
+        if not repo_root.exists():
+            repo_root = Path.cwd()
+
+        dbt_bin = os.getenv("AIRFLOW_DBT_BIN", "dbt")
+        command = [
+            dbt_bin,
+            "docs",
+            "generate",
+            "--project-dir",
+            "warehouse/dbt",
+            "--profiles-dir",
+            "warehouse/dbt/profiles",
+            "--target",
+            payload["target_env"],
+        ]
+        LOGGER.info("Running dbt docs generate command: %s", " ".join(command))
         subprocess.run(command, cwd=str(repo_root), check=True)
         return payload
 
@@ -237,12 +288,14 @@ def retail_environment_promotion_workflow() -> None:
     validated = validate_promotion_request()
     dependency_checked = check_dependency_artifact(validated)
     built = run_dbt_build(dependency_checked)
-    scanned = run_quality_observability_scan(built)
+    freshness = run_dbt_source_freshness(built)
+    docs_generated = run_dbt_docs_generate(freshness)
+    scanned = run_quality_observability_scan(docs_generated)
     published = publish_promotion_record(scanned)
     metadata = publish_run_metadata()
 
-    start >> validated >> dependency_checked >> built >> scanned >> published
-    [validated, dependency_checked, built, scanned, published] >> metadata >> finish
+    start >> validated >> dependency_checked >> built >> freshness >> docs_generated >> scanned >> published
+    [validated, dependency_checked, built, freshness, docs_generated, scanned, published] >> metadata >> finish
 
 
 dag: Any = retail_environment_promotion_workflow()

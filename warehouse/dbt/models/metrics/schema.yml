@@ -3,10 +3,17 @@ version: 2
 models:
   - name: mrt_revenue_by_region
     description: Daily revenue model for regional executive reporting.
+    config:
+      tags: ["governed", "phase2", "metric_model"]
+      meta:
+        owner: analytics-engineering
+        data_tier: serving
+        contains_pii: false
     columns:
       - name: report_date
         tests:
           - not_null
+          - not_future_date
       - name: region
         tests:
           - not_null
@@ -17,6 +24,12 @@ models:
 
   - name: mrt_top_products_last_30_days
     description: Product ranking model for the latest 30-day window.
+    config:
+      tags: ["governed", "phase2", "metric_model"]
+      meta:
+        owner: analytics-engineering
+        data_tier: serving
+        contains_pii: false
     columns:
       - name: product_id
         tests:
@@ -31,6 +44,13 @@ models:
 
   - name: mrt_customer_segmentation
     description: Customer segmentation model based on LTV, recency, and frequency.
+    config:
+      tags: ["governed", "phase2", "metric_model"]
+      meta:
+        owner: analytics-engineering
+        data_tier: serving
+        contains_pii: true
+        pii_policy: masked_in_serving
     columns:
       - name: customer_id
         tests:
@@ -44,4 +64,3 @@ models:
           - not_null
           - accepted_values:
               values: ["Champions", "Loyal", "At Risk", "Emerging"]
-

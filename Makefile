@@ -21,7 +21,7 @@ PY := $(VENV_BIN)/python
 
 .PHONY: init format lint test-unit test-integration test precommit ci clean \
 	airflow-dag-validate dbt-build dbt-docs soda-scan monitoring-up monitoring-down \
-	platform-check
+	dbt-source-freshness dbt-phase2-gate dbt-governance-validate platform-check
 
 init:
 >$(PYTHON) -m venv $(VENV)
@@ -61,6 +61,17 @@ dbt-build:
 
 dbt-docs:
 >$(DBT) docs generate --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET)
+
+dbt-source-freshness:
+>$(DBT) source freshness --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET)
+
+dbt-phase2-gate:
+>$(DBT) build --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET) --selector phase2_governed_models
+>$(DBT) source freshness --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET)
+>$(DBT) docs generate --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET)
+
+dbt-governance-validate:
+>$(PY) scripts/validate_dbt_governance.py --repo-root .
 
 soda-scan:
 >$(PY) scripts/run_soda_scan.py --configuration $(SODA_CONFIG) --checks $(SODA_CHECKS) --target $(TARGET_ENV)

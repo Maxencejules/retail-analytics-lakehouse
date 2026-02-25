@@ -10,6 +10,7 @@ models:
         data_tier: gold
         contains_pii: true
         pii_policy: masked_in_serving
+        contract_name: dim_customer_v1
     columns:
       - name: customer_sk
         tests:
@@ -23,6 +24,34 @@ models:
         tests:
           - not_null
 
+  - name: dim_customer_scd2
+    description: Customer SCD2 dimension generated from dbt snapshots.
+    config:
+      tags: ["governed", "phase2", "dimension", "scd2"]
+      meta:
+        owner: analytics-engineering
+        data_tier: gold
+        contains_pii: true
+        pii_policy: masked_in_serving
+        contract_name: dim_customer_scd2_v1
+    columns:
+      - name: customer_version_sk
+        tests:
+          - not_null
+          - unique
+      - name: customer_sk
+        tests:
+          - not_null
+      - name: customer_id
+        tests:
+          - not_null
+      - name: valid_from_utc
+        tests:
+          - not_null
+      - name: is_current
+        tests:
+          - not_null
+
   - name: dim_product
     description: Product dimension with deterministic surrogate key.
     config:
@@ -31,6 +60,7 @@ models:
         owner: analytics-engineering
         data_tier: gold
         contains_pii: false
+        contract_name: dim_product_v1
     columns:
       - name: product_sk
         tests:
@@ -52,6 +82,7 @@ models:
         owner: analytics-engineering
         data_tier: gold
         contains_pii: false
+        contract_name: dim_store_v1
     columns:
       - name: store_sk
         tests:
@@ -73,6 +104,7 @@ models:
         owner: analytics-engineering
         data_tier: gold
         contains_pii: false
+        contract_name: dim_time_v1
     columns:
       - name: time_sk
         tests:
@@ -93,6 +125,7 @@ models:
         data_tier: gold
         contains_pii: false
         semantic_contract: retail_sales_v1
+        contract_name: fact_sales_v1
     columns:
       - name: transaction_id
         tests:

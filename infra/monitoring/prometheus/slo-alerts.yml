@@ -1,0 +1,42 @@
+groups:
+  - name: lakehouse-slo-alerts
+    rules:
+      - alert: DataFreshnessSLOBreached
+        expr: time() - max(lakehouse_data_freshness_timestamp_seconds{dataset="fact_sales"}) > 1800
+        for: 10m
+        labels:
+          severity: critical
+          slo: freshness
+        annotations:
+          summary: "Freshness SLO breach for fact_sales"
+          description: "fact_sales freshness lag has exceeded 30 minutes."
+
+      - alert: PipelineLatencySLOBreached
+        expr: histogram_quantile(0.95, sum(rate(lakehouse_pipeline_latency_seconds_bucket[5m])) by (le, pipeline)) > 300
+        for: 10m
+        labels:
+          severity: warning
+          slo: latency
+        annotations:
+          summary: "Pipeline latency SLO breach"
+          description: "P95 pipeline latency has exceeded 5 minutes."
+
+      - alert: DataQualitySLOBreached
+        expr: increase(lakehouse_data_quality_failures_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          slo: quality
+        annotations:
+          summary: "Data quality SLO breach"
+          description: "At least one critical data quality failure occurred in the last 15 minutes."
+
+      - alert: CostBudgetSLOBreached
+        expr: max(lakehouse_cost_budget_utilization_ratio) > 0.85
+        for: 30m
+        labels:
+          severity: warning
+          slo: cost
+        annotations:
+          summary: "Cost SLO warning"
+          description: "Budget utilization ratio has exceeded 85%."

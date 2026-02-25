@@ -9,6 +9,8 @@ SODA_CONFIG ?= quality/soda/configuration.yml
 SODA_CHECKS ?= quality/soda/checks/gold_quality.yml
 DBT_TARGET ?= dev
 TARGET_ENV ?= dev
+DBT_STATE_DIR ?= .tmp/dbt-state
+DBT_SLIM_SELECTION_FILE ?= .tmp/dbt-state/selection.txt
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN := $(VENV)/Scripts
@@ -22,7 +24,8 @@ PY := $(VENV_BIN)/python
 .PHONY: init format lint test-unit test-integration test precommit ci clean \
 	airflow-dag-validate dbt-build dbt-docs soda-scan monitoring-up monitoring-down \
 	dbt-source-freshness dbt-phase2-gate dbt-governance-validate \
-	compact-lakehouse phase3-policy-validate phase3-gate platform-check
+	compact-lakehouse phase3-policy-validate phase3-gate platform-check \
+	dbt-slim-ci
 
 init:
 >$(PYTHON) -m venv $(VENV)
@@ -54,7 +57,9 @@ ci: lint test-unit test-integration
 airflow-dag-validate:
 >$(PY) -m py_compile infra/airflow/dags/common/notifications.py \
 >	infra/airflow/dags/common/run_metadata.py \
+>	infra/airflow/dags/common/datasets.py \
 >	infra/airflow/dags/batch_etl_orchestration.py \
+>	infra/airflow/dags/batch_etl_backfill.py \
 >	infra/airflow/dags/environment_promotion_workflow.py \
 >	infra/airflow/dags/cost_performance_optimization.py
 
@@ -74,6 +79,9 @@ dbt-phase2-gate:
 
 dbt-governance-validate:
 >$(PY) scripts/validate_dbt_governance.py --repo-root .
+
+dbt-slim-ci:
+>$(PY) scripts/dbt_slim_ci.py --repo-root . --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET) --dbt-bin $(VENV_BIN)/dbt --state-dir $(DBT_STATE_DIR) --output-file $(DBT_SLIM_SELECTION_FILE)
 
 compact-lakehouse:
 >$(PY) spark/optimization/compact_tables.py --base-path data/lakehouse --table-format parquet --target-file-size-mb 256

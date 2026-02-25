@@ -16,6 +16,7 @@ from spark.batch.transforms import (
     prepare_bronze,
     transform_bronze_to_silver,
 )
+from spark.common.lineage import OpenLineageConfig, apply_openlineage
 from spark.common.performance import SparkPerformanceProfile, apply_performance_profile
 
 LOGGER = logging.getLogger("spark.batch.pipeline")
@@ -23,12 +24,14 @@ LOGGER = logging.getLogger("spark.batch.pipeline")
 
 def build_spark_session(config: PipelineConfig) -> SparkSession:
     profile = SparkPerformanceProfile.from_env()
+    lineage = OpenLineageConfig.from_env(default_parent_job_name=config.app_name)
     builder = (
         SparkSession.builder.appName(config.app_name)
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
     )
     builder = apply_performance_profile(builder, profile)
+    builder = apply_openlineage(builder, lineage)
     spark = builder.getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
     LOGGER.info("spark_performance_profile_applied %s", profile.as_dict())

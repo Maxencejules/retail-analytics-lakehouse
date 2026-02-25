@@ -9,6 +9,7 @@ models:
         owner: analytics-engineering
         data_tier: serving
         contains_pii: false
+        contract_name: mrt_revenue_by_region_v1
     columns:
       - name: report_date
         tests:
@@ -30,6 +31,7 @@ models:
         owner: analytics-engineering
         data_tier: serving
         contains_pii: false
+        contract_name: mrt_top_products_last_30_days_v1
     columns:
       - name: product_id
         tests:
@@ -51,6 +53,7 @@ models:
         data_tier: serving
         contains_pii: true
         pii_policy: masked_in_serving
+        contract_name: mrt_customer_segmentation_v1
     columns:
       - name: customer_id
         tests:

@@ -26,7 +26,8 @@ Detailed architecture reference:
 
 - Airflow orchestration:
   - [infra/airflow](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/README.md)
-  - Batch DAG includes retries, backfills, dependency checks, and SLA miss notifications.
+  - Daily batch DAG uses dataset-aware scheduling with provider-native operators.
+  - Dedicated backfill DAG is separated from daily orchestration.
   - Promotion DAG enforces `dev -> stage -> prod` gates with dbt + Soda checks.
   - Run metadata artifacts are emitted for orchestration audit trails.
 - dbt warehouse discipline:
@@ -34,7 +35,7 @@ Detailed architecture reference:
   - Staging, marts, semantic/metric models, exposures, and governance selectors.
 - Monitoring stack:
   - [infra/monitoring](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/README.md)
-  - CloudWatch + Prometheus/Grafana + OpenLineage/Marquez baseline.
+  - CloudWatch + Prometheus/Alertmanager/Grafana + OpenLineage/Marquez baseline.
 - Data-quality observability:
   - [quality/soda](C:/Users/USER/retail-analytics-lakehouse/quality/soda/README.md)
   - Alert routing via webhook and optional SNS.
@@ -73,6 +74,7 @@ pip install -r requirements-dbt.txt
 pip install -r requirements-quality.txt
 make dbt-build DBT_TARGET=dev
 make dbt-docs DBT_TARGET=dev
+make dbt-slim-ci DBT_TARGET=dev
 make dbt-governance-validate
 make phase3-policy-validate
 make compact-lakehouse

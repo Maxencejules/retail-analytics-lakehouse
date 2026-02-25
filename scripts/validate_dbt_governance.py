@@ -22,6 +22,7 @@ def _validate_model_contracts(
     *,
     required_tag: str,
     path_label: str,
+    require_contract_name: bool = True,
 ) -> list[str]:
     errors: list[str] = []
     models = schema_doc.get("models", [])
@@ -54,6 +55,13 @@ def _validate_model_contracts(
         owner = str(meta.get("owner", "")).strip()
         if not owner:
             errors.append(f"{path_label}:{model_name}: meta.owner is required.")
+
+        if require_contract_name:
+            contract_name = str(meta.get("contract_name", "")).strip()
+            if not contract_name:
+                errors.append(
+                    f"{path_label}:{model_name}: meta.contract_name is required."
+                )
 
     return errors
 

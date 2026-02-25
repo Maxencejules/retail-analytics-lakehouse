@@ -24,7 +24,8 @@ Design implication:
 - Surrogate keys are used in all dimensions (`*_sk`) to isolate analytics joins from source-system key volatility.
 - `transaction_id` is kept in the fact as the immutable business key and constrained unique for idempotent loads.
 - `dim_time` uses deterministic key `YYYYMMDD` for predictable joins and easy partition/date filtering.
-- Type-1 dimension behavior is applied in incremental upserts (latest attributes overwrite prior values).
+- Type-1 dimension behavior is applied for serving dimensions (`dim_customer`, `dim_product`, `dim_store`).
+- SCD2 customer history is available through dbt snapshot-driven `dim_customer_scd2`.
 - `fact_sales` enforces non-negative measures with constraints:
   - `quantity > 0`
   - `revenue >= 0`

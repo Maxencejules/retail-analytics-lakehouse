@@ -17,6 +17,7 @@ This dbt project manages warehouse transformations and metric models for:
 - `models/metrics/`: metric-serving aggregate models
 - `models/semantic/`: semantic model and metric contracts
 - `models/exposures.yml`: dashboard lineage ownership mapping
+- `snapshots/`: SCD2 history snapshots (customer)
 - `macros/`: surrogate key and custom data-quality test macros
 - `selectors.yml`: governance selectors for CI/CD and promotion
 
@@ -29,6 +30,7 @@ dbt deps --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles
 dbt build --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target dev
 dbt docs generate --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target dev
 dbt source freshness --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target dev
+dbt snapshot --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target dev
 ```
 
 Or run via Make:
@@ -37,6 +39,7 @@ Or run via Make:
 make dbt-build DBT_TARGET=dev
 make dbt-docs DBT_TARGET=dev
 make dbt-source-freshness DBT_TARGET=dev
+make dbt-slim-ci DBT_TARGET=dev
 make dbt-phase2-gate DBT_TARGET=dev
 make dbt-governance-validate
 ```

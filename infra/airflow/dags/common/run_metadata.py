@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any
@@ -68,6 +70,34 @@ def derive_overall_status(task_states: list[dict[str, Any]]) -> str:
     if states and states.issubset(TERMINAL_SUCCESS_STATES | TERMINAL_NON_SUCCESS_STATES):
         return "partial_success"
     return "unknown"
+
+
+def collect_deployment_metadata() -> dict[str, Any]:
+    """Collect deployment metadata for auditability in run records."""
+    deployment: dict[str, Any] = {}
+    env_fields = (
+        ("deployment_env", "DEPLOYMENT_ENV"),
+        ("git_sha", "DEPLOYMENT_GIT_SHA"),
+        ("git_ref", "DEPLOYMENT_GIT_REF"),
+        ("release_version", "DEPLOYMENT_RELEASE_VERSION"),
+        ("image_tag", "DEPLOYMENT_IMAGE_TAG"),
+        ("image_digest", "DEPLOYMENT_IMAGE_DIGEST"),
+    )
+    for field_name, env_name in env_fields:
+        value = os.getenv(env_name, "").strip()
+        if value:
+            deployment[field_name] = value
+
+    manifest_path = os.getenv("DBT_MANIFEST_PATH", "").strip()
+    if manifest_path:
+        deployment["dbt_manifest_path"] = manifest_path
+        if not manifest_path.startswith("s3://"):
+            manifest_file = Path(manifest_path)
+            if manifest_file.exists() and manifest_file.is_file():
+                manifest_hash = hashlib.sha256(manifest_file.read_bytes()).hexdigest()
+                deployment["dbt_manifest_sha256"] = manifest_hash
+
+    return deployment
 
 
 def write_json_record(record: dict[str, Any], output_path: str) -> None:

@@ -20,6 +20,7 @@ from pyspark.sql.types import (
     StructField,
     StructType,
 )
+from spark.common.lineage import OpenLineageConfig, apply_openlineage
 from spark.common.performance import SparkPerformanceProfile, apply_performance_profile
 
 LOGGER = logging.getLogger("spark.streaming.transactions")
@@ -117,12 +118,14 @@ def configure_logging(level: str) -> None:
 
 def build_spark_session(app_name: str) -> SparkSession:
     profile = SparkPerformanceProfile.from_env()
+    lineage = OpenLineageConfig.from_env(default_parent_job_name=app_name)
     builder = (
         SparkSession.builder.appName(app_name)
         .config("spark.sql.session.timeZone", "UTC")
         .config("spark.sql.streaming.metricsEnabled", "true")
     )
     builder = apply_performance_profile(builder, profile)
+    builder = apply_openlineage(builder, lineage)
     spark = builder.getOrCreate()
     LOGGER.info("spark_performance_profile_applied %s", profile.as_dict())
     return spark

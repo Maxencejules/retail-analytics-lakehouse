@@ -13,6 +13,7 @@ from uuid import uuid4
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
 
+from spark.common.lineage import OpenLineageConfig, apply_openlineage
 from spark.common.performance import SparkPerformanceProfile, apply_performance_profile
 
 LOGGER = logging.getLogger("spark.optimization.compaction")
@@ -167,6 +168,7 @@ def configure_logging(log_level: str) -> None:
 
 def build_spark_session(config: CompactionConfig) -> SparkSession:
     profile = SparkPerformanceProfile.from_env()
+    lineage = OpenLineageConfig.from_env(default_parent_job_name=config.app_name)
     if config.shuffle_partitions is not None:
         profile = replace(profile, shuffle_partitions=config.shuffle_partitions)
         profile.validate()
@@ -177,6 +179,7 @@ def build_spark_session(config: CompactionConfig) -> SparkSession:
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
     )
     builder = apply_performance_profile(builder, profile)
+    builder = apply_openlineage(builder, lineage)
     spark = builder.getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
     LOGGER.info("spark_performance_profile_applied %s", profile.as_dict())

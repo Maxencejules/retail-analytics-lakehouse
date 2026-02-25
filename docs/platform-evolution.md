@@ -53,11 +53,13 @@ Artifacts:
 - [run_metadata.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/common/run_metadata.py)
 
 Implemented capabilities:
-- Retry policies and backfill support (`catchup=True`) for batch ETL.
+- Dataset-aware scheduling for daily batch ETL via Airflow `Dataset` dependencies.
+- Provider-native orchestration operators (Spark submit, sensors, Bash).
 - Upstream dependency checks before compute execution.
 - SLA miss and task-failure notifications via webhook callback.
+- Dedicated backfill DAG separated from daily orchestration with bounded date-range controls.
 - Promotion workflow with environment ordering gates (`dev -> stage -> prod`).
-- Promotion gates require dbt build success and Soda quality checks.
+- Promotion gates require dbt governance contracts, source+target freshness, source+target snapshots, and Soda quality checks.
 - Run metadata publication for both batch and promotion DAG runs on success/failure paths.
 
 ## 2. dbt Warehouse Layer
@@ -72,12 +74,14 @@ Artifacts:
 
 Implemented capabilities:
 - Staging normalization models (`stg_*`) and star-schema marts (`dim_*`, `fact_sales`).
+- SCD2 customer history snapshots (`snp_dim_customer_history`) and a curated `dim_customer_scd2` mart.
 - Metric-serving models for executive analytics.
 - Semantic model contracts and reusable metrics for governed downstream consumption.
 - Automated tests for uniqueness, referential integrity, freshness, accepted values, and measure sanity.
 - Exposure lineage mapping from marts to executive dashboard assets.
 - Selector-based governance scope (`phase2_governed_models`) for controlled promotion.
 - CI governance contract validation for semantic assets, exposures, tags, and model ownership metadata.
+- State-aware slim CI selection workflow (`state:modified+`) for targeted dbt validation.
 - Environment-based targets for deployment discipline and controlled promotion.
 
 ## 3. Unified Monitoring Stack
@@ -90,6 +94,9 @@ Artifacts:
 Implemented capabilities:
 - CloudWatch agent configuration for infrastructure and pipeline logs.
 - Prometheus scraping and alert rules for platform health.
+- Alertmanager routing for centralized alert fanout.
+- Exporter coverage for Kafka and warehouse Postgres telemetry.
+- SLO alerting for freshness, latency, quality, and cost objectives.
 - Grafana provisioning for dashboards and data sources.
 - OpenLineage configuration for Airflow/Spark lineage export to Marquez.
 

@@ -19,3 +19,47 @@ groups:
           summary: "Spark metrics endpoint unavailable"
           description: "Spark metrics endpoint has been down for more than 10 minutes."
 
+      - alert: KafkaExporterUnavailable
+        expr: up{job="kafka-exporter"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Kafka exporter unavailable"
+          description: "Kafka exporter has been down for more than 5 minutes."
+
+      - alert: WarehouseExporterUnavailable
+        expr: up{job="warehouse-exporter"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Warehouse exporter unavailable"
+          description: "Postgres exporter for the warehouse has been down for more than 5 minutes."
+
+      - alert: KafkaLagHigh
+        expr: max(kafka_consumergroup_lag) > 100000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka consumer lag is elevated"
+          description: "Consumer lag exceeded 100k messages for more than 10 minutes."
+
+      - alert: WarehouseConnectionPressure
+        expr: max(pg_stat_activity_count) > 120
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Warehouse connection pressure high"
+          description: "Active warehouse connections exceeded 120 for more than 10 minutes."
+
+      - alert: MarquezApiUnavailable
+        expr: up{job="marquez"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Marquez API unavailable"
+          description: "Lineage API endpoint is unavailable."

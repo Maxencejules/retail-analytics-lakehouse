@@ -4,31 +4,50 @@
   "title": "Lakehouse Overview",
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 1,
+  "version": 2,
   "refresh": "30s",
   "panels": [
     {
       "type": "timeseries",
       "title": "Airflow Metrics Endpoint Availability",
-      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
-      "targets": [
-        {
-          "expr": "up{job=\"airflow-metrics\"}",
-          "refId": "A"
-        }
-      ]
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 8 },
+      "targets": [{ "expr": "up{job=\"airflow-metrics\"}", "refId": "A" }]
     },
     {
       "type": "timeseries",
       "title": "Spark Metrics Endpoint Availability",
-      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
-      "targets": [
-        {
-          "expr": "up{job=\"spark-metrics\"}",
-          "refId": "A"
-        }
-      ]
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 8 },
+      "targets": [{ "expr": "up{job=\"spark-metrics\"}", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Kafka Exporter Availability",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 8 },
+      "targets": [{ "expr": "up{job=\"kafka-exporter\"}", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Kafka Consumer Lag",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [{ "expr": "max(kafka_consumergroup_lag)", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Warehouse Connections",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [{ "expr": "max(pg_stat_activity_count)", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Data Freshness Lag (fact_sales)",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "targets": [{ "expr": "time() - max(lakehouse_data_freshness_timestamp_seconds{dataset=\"fact_sales\"})", "refId": "A" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Budget Utilization Ratio",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [{ "expr": "max(lakehouse_cost_budget_utilization_ratio)", "refId": "A" }]
     }
   ]
 }
-

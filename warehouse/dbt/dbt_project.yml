@@ -11,6 +11,8 @@ model-paths:
   - models
 macro-paths:
   - macros
+snapshot-paths:
+  - snapshots
 
 target-path: target
 clean-targets:
@@ -47,3 +49,11 @@ models:
       +meta:
         owner: analytics-engineering
         data_tier: serving
+
+snapshots:
+  retail_analytics_warehouse:
+    +schema: warehouse_snapshot
+    +tags: ["governed", "snapshot", "phase2"]
+    +meta:
+      owner: analytics-engineering
+      data_tier: snapshot

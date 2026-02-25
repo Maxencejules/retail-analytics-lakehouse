@@ -7,9 +7,23 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
+    depends_on:
+      - alertmanager
+      - kafka-exporter
+      - warehouse-exporter
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./prometheus/slo-alerts.yml:/etc/prometheus/slo-alerts.yml:ro
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
 
   grafana:
     image: grafana/grafana-oss:11.2.2
@@ -23,6 +37,20 @@ services:
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  kafka-exporter:
+    image: danielqsj/kafka-exporter:v1.8.0
+    command:
+      - --kafka.server=${KAFKA_EXPORTER_SERVER:-kafka:9092}
+    ports:
+      - "9308:9308"
+
+  warehouse-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.16.0
+    environment:
+      DATA_SOURCE_NAME: ${WAREHOUSE_EXPORTER_DSN:-postgresql://postgres:postgres@warehouse:5432/retail_analytics?sslmode=disable}
+    ports:
+      - "9187:9187"
 
   marquez-db:
     image: postgres:15
@@ -44,4 +72,3 @@ services:
     ports:
       - "5000:5000"
       - "5001:5001"
-

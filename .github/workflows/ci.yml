@@ -41,6 +41,12 @@ jobs:
       - name: Run lint checks
         run: make lint
 
+      - name: Install dbt dependency
+        run: ./.venv/bin/pip install -r requirements-dbt.txt
+
+      - name: Resolve dbt slim CI selection (state:modified+)
+        run: make dbt-slim-ci DBT_TARGET=dev
+
       - name: Validate dbt governance contracts
         run: make dbt-governance-validate
 

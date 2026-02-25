@@ -3,7 +3,7 @@
 Unified observability baseline:
 
 - CloudWatch (infrastructure + log ingestion)
-- Prometheus + Grafana (metrics, dashboards, alert rules)
+- Prometheus + Alertmanager + Grafana (metrics, dashboards, alert rules)
 - OpenLineage + Marquez (data lineage)
 
 ## Local Stack
@@ -29,6 +29,9 @@ make monitoring-down
 - Prometheus scrape + alerts:
   - [prometheus.yml](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/prometheus/prometheus.yml)
   - [alerts.yml](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/prometheus/alerts.yml)
+  - [slo-alerts.yml](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/prometheus/slo-alerts.yml)
+- Alertmanager routing:
+  - [alertmanager.yml](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/alertmanager/alertmanager.yml)
 - Grafana provisioning + dashboard:
   - [datasources.yml](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/grafana/provisioning/datasources/datasources.yml)
   - [dashboards.yml](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/grafana/provisioning/dashboards/dashboards.yml)
@@ -41,6 +44,20 @@ make monitoring-down
 
 ## Alert Routing
 
-- Prometheus rules define infrastructure and platform alerts.
+- Prometheus rules define infrastructure, platform, and SLO alerts (freshness, latency, quality, cost).
+- Alertmanager routes all Prometheus alerts to configured receivers.
+- Replace the default webhook endpoint in `infra/monitoring/alertmanager/alertmanager.yml` with your incident router.
 - Airflow failure/SLA callbacks use `AIRFLOW_ALERT_WEBHOOK_URL`.
 - Soda quality failures route to `SODA_ALERT_WEBHOOK_URL` and/or `SODA_ALERT_SNS_TOPIC_ARN`.
+- SLO definitions are documented in [SLOS.md](C:/Users/USER/retail-analytics-lakehouse/infra/monitoring/SLOS.md).
+
+## Exporter Coverage
+
+- Airflow metrics endpoint (`airflow-metrics` scrape job)
+- Spark executor metrics endpoint (`spark-metrics` scrape job)
+- Kafka exporter (`kafka-exporter` service)
+- Warehouse Postgres exporter (`warehouse-exporter` service)
+
+Environment knobs:
+- `KAFKA_EXPORTER_SERVER` (default `kafka:9092`)
+- `WAREHOUSE_EXPORTER_DSN` (Postgres DSN for warehouse exporter)

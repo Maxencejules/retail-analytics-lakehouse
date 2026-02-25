@@ -9,9 +9,10 @@ It runs these stages in order:
 1. Pre-commit checks
 2. Lint checks
 3. dbt governance contract validation
-4. Phase 3 policy artifact validation
-5. Unit tests
-6. Integration test:
+4. dbt slim selection validation (`state:modified+`)
+5. Phase 3 policy artifact validation
+6. Unit tests
+7. Integration test:
    - generate 1,000 synthetic transactions
    - run batch ETL
    - validate Gold outputs exist and contain rows
@@ -35,6 +36,7 @@ Main targets:
 - `make dbt-source-freshness DBT_TARGET=dev`: enforce source freshness SLAs.
 - `make dbt-phase2-gate DBT_TARGET=dev`: run governed build + freshness + docs gate.
 - `make dbt-governance-validate`: enforce semantic/exposure/governance contract metadata.
+- `make dbt-slim-ci DBT_TARGET=dev`: resolve state-aware dbt slim CI selection.
 - `make phase3-policy-validate`: validate compaction/scaling/WLM/lifecycle/budget policy artifacts.
 - `make compact-lakehouse`: run Spark compaction for Silver/Gold targets.
 - `make soda-scan TARGET_ENV=dev`: run Soda quality checks and alert on failure.

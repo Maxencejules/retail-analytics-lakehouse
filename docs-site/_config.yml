@@ -1,0 +1,11 @@
+title: Retail Analytics Lakehouse Docs
+description: Interactive platform documentation for architecture, operations, and developer workflows.
+markdown: kramdown
+highlighter: rouge
+url: ""
+baseurl: ""
+repository_url: "https://github.com/<YOUR_GITHUB_ORG_OR_USER>/<YOUR_REPO>"
+docs_default_branch: "main"
+live_demo_url: ""
+live_demo_label: "AWS Free Tier Demo"
+live_demo_aws_region: "us-east-1"

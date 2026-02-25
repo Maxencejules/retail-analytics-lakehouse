@@ -1,0 +1,65 @@
+<mxfile host="app.diagrams.net" modified="2026-02-25T16:30:00.000Z" agent="Codex" version="24.7.17">
+  <diagram id="lakehouse-main" name="Retail Lakehouse">
+    <mxGraphModel dx="1280" dy="720" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="src" value="Source Systems&#xa;POS | eCom | CRM | Mobile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="ingest" value="Ingestion&#xa;Kafka + Batch APIs/Files" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="320" y="220" width="220" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bronze" value="Bronze&#xa;Raw immutable records" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="620" y="90" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="silver" value="Silver&#xa;Validated and conformed" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="620" y="220" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="gold" value="Gold&#xa;Business-ready marts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="620" y="350" width="220" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="warehouse" value="Warehouse&#xa;Postgres / Redshift + dbt" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="930" y="220" width="260" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="bi" value="BI / Serving&#xa;Dashboard + APIs + Semantic Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#cfe2f3;strokeColor=#6c8ebf;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="220" width="280" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="federation" value="Federation&#xa;Trino cross-source SQL" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d9ead3;strokeColor=#82b366;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="930" y="360" width="260" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="obs" value="Ops Plane&#xa;CI/CD + Quality + Monitoring + Lineage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontSize=13;" vertex="1" parent="1">
+          <mxGeometry x="320" y="520" width="870" height="90" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="src" target="ingest">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="ingest" target="bronze">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="bronze" target="silver">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="silver" target="gold">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="gold" target="warehouse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="endArrow=block;html=1;strokeWidth=2;" edge="1" parent="1" source="warehouse" target="bi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" style="endArrow=block;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1" source="gold" target="federation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" style="endArrow=block;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1" source="warehouse" target="federation">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" style="endArrow=block;html=1;strokeWidth=2;dashed=1;" edge="1" parent="1" source="federation" target="bi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

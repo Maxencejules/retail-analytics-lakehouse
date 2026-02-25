@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page.title }} | {{ site.title }}</title>
+    <meta name="description" content="{{ site.description }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    >
+    <link rel="stylesheet" href="{{ '/assets/css/site.css' | relative_url }}">
+  </head>
+  <body
+    data-live-demo-url="{{ site.live_demo_url }}"
+    data-live-demo-label="{{ site.live_demo_label }}"
+    data-live-demo-region="{{ site.live_demo_aws_region }}"
+    data-default-branch="{{ site.docs_default_branch }}"
+    data-repository-url="{{ site.repository_url }}"
+    data-drawio-path="docs-site/assets/diagrams/lakehouse-architecture.drawio"
+  >
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="{{ '/' | relative_url }}">{{ site.title }}</a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="{{ '/' | relative_url }}">Home</a>
+          <a href="{{ '/architecture/' | relative_url }}">Architecture</a>
+          <a href="{{ '/api-reference/' | relative_url }}">Script API</a>
+          <a href="{{ '/quickstart/' | relative_url }}">Quickstart</a>
+          <a href="{{ '/live-demo/' | relative_url }}">Live Demo</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container page-content">
+      {{ content }}
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-wrap">
+        <p>
+          Source repository:
+          <a href="{{ site.repository_url }}">{{ site.repository_url }}</a>
+        </p>
+        <p class="mono" id="footer-year"></p>
+      </div>
+    </footer>
+
+    <script src="{{ '/assets/js/site.js' | relative_url }}"></script>
+  </body>
+</html>

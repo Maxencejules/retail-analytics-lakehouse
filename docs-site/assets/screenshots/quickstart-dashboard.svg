@@ -1,0 +1,42 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" rx="16" fill="#F1F5F9"/>
+  <rect x="0" y="0" width="1280" height="72" fill="#0F766E"/>
+  <text x="36" y="46" fill="#ECFEFF" font-family="Space Grotesk, sans-serif" font-size="30" font-weight="700">Retail Analytics Dashboard</text>
+
+  <rect x="28" y="100" width="300" height="140" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="348" y="100" width="300" height="140" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="668" y="100" width="300" height="140" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="988" y="100" width="264" height="140" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+
+  <text x="52" y="144" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Revenue (30d)</text>
+  <text x="52" y="195" fill="#0F766E" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700">$1.94M</text>
+
+  <text x="372" y="144" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Transactions</text>
+  <text x="372" y="195" fill="#0F766E" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700">428,390</text>
+
+  <text x="692" y="144" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Top Category</text>
+  <text x="692" y="195" fill="#0F766E" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700">Beverages</text>
+
+  <text x="1012" y="144" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Quality SLA</text>
+  <text x="1012" y="195" fill="#16A34A" font-family="Space Grotesk, sans-serif" font-size="36" font-weight="700">99.9%</text>
+
+  <rect x="28" y="270" width="790" height="420" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="838" y="270" width="414" height="200" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <rect x="838" y="490" width="414" height="200" rx="14" fill="#FFFFFF" stroke="#CBD5E1"/>
+
+  <polyline points="70,610 160,540 250,560 340,470 430,490 520,420 610,440 700,360 790,395" stroke="#0F766E" stroke-width="5" fill="none"/>
+  <text x="52" y="316" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Daily Revenue Trend</text>
+
+  <text x="862" y="312" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Top Stores</text>
+  <rect x="862" y="335" width="358" height="24" rx="6" fill="#CCFBF1"/>
+  <rect x="862" y="370" width="300" height="24" rx="6" fill="#99F6E4"/>
+  <rect x="862" y="405" width="254" height="24" rx="6" fill="#5EEAD4"/>
+
+  <text x="862" y="532" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="20">Pipeline Health</text>
+  <circle cx="900" cy="578" r="18" fill="#22C55E"/>
+  <text x="935" y="586" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="19">Ingestion healthy</text>
+  <circle cx="900" cy="622" r="18" fill="#22C55E"/>
+  <text x="935" y="630" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="19">Batch ETL healthy</text>
+  <circle cx="900" cy="666" r="18" fill="#22C55E"/>
+  <text x="935" y="674" fill="#334155" font-family="Space Grotesk, sans-serif" font-size="19">Federation healthy</text>
+</svg>

@@ -13,6 +13,7 @@ Production-grade monorepo for a modular retail analytics lakehouse spanning inge
 - [Configuration](#configuration)
 - [Performance Benchmarking](#performance-benchmarking)
 - [Federated Queries with Trino](#federated-queries-with-trino)
+- [GitHub Pages Docs Site](#github-pages-docs-site)
 - [Quality Standards and CI](#quality-standards-and-ci)
 - [Security](#security)
 - [Documentation](#documentation)
@@ -73,6 +74,7 @@ Detailed architecture references:
 | `scripts/` | CI and validation scripts (integration, governance, policy, quality). |
 | `tests/` | Unit tests for ingestion and Spark transformation logic. |
 | `perf/` | Benchmark scripts documentation and generated performance reports. |
+| `docs-site/` | Jekyll-based GitHub Pages site for interactive documentation. |
 | `docs/` | Architecture, cloud setup, CI/CD, and operational guidance. |
 
 ## Getting Started
@@ -293,6 +295,22 @@ Benchmark outputs:
 Benchmark details and advanced options:
 - [perf/README.md](perf/README.md)
 
+## GitHub Pages Docs Site
+
+Docs site source:
+- [docs-site/README.md](docs-site/README.md)
+
+Deployment workflow:
+- [.github/workflows/pages.yml](.github/workflows/pages.yml)
+
+Hosted content includes:
+- architecture diagrams backed by Draw.io source files,
+- script/API references for custom operational tooling,
+- quickstart guide with visual walkthrough screenshots,
+- dynamic live-demo link support for AWS Free Tier sample deployments.
+
+After pushing this workflow, enable GitHub Pages in repository settings and choose **GitHub Actions** as the source.
+
 ## Quality Standards and CI
 
 Local development standards:
@@ -337,6 +355,7 @@ Additional recommended practices:
 - Platform evolution roadmap: [docs/platform-evolution.md](docs/platform-evolution.md)
 - Cost/performance automation: [docs/cost-performance.md](docs/cost-performance.md)
 - Performance benchmarking: [perf/README.md](perf/README.md)
+- Interactive GitHub Pages docs: [docs-site/README.md](docs-site/README.md)
 - AWS setup: [docs/aws-setup.md](docs/aws-setup.md)
 - Federated querying with Trino: [docs/federated-querying.md](docs/federated-querying.md)
 - CI/CD quality gates: [docs/ci-cd.md](docs/ci-cd.md)

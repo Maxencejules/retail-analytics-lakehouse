@@ -12,6 +12,7 @@ Production-grade monorepo for a modular retail analytics lakehouse spanning inge
 - [Operational Runbook](#operational-runbook)
 - [Configuration](#configuration)
 - [Performance Benchmarking](#performance-benchmarking)
+- [ML Integration (PyTorch)](#ml-integration-pytorch)
 - [Chaos Engineering and SLA](#chaos-engineering-and-sla)
 - [Federated Queries with Trino](#federated-queries-with-trino)
 - [GitHub Pages Docs Site](#github-pages-docs-site)
@@ -72,6 +73,7 @@ Detailed architecture references:
 | `infra/aws/` | AWS environment templates, IAM/policy examples, runtime configuration helpers. |
 | `quality/soda/` | Soda quality definitions and alert routing templates. |
 | `dashboard/` | Streamlit dashboard and data-access layer for KPI consumption. |
+| `models/` | PyTorch training/scoring scripts for Gold-layer ML use cases. |
 | `scripts/` | CI and validation scripts (integration, governance, policy, quality). |
 | `tests/` | Unit tests for ingestion and Spark transformation logic. |
 | `perf/` | Benchmark scripts documentation and generated performance reports. |
@@ -216,6 +218,21 @@ make monitoring-down
 
 Reference: [infra/monitoring/README.md](infra/monitoring/README.md)
 
+### ML Training and Retraining (PyTorch)
+
+```bash
+pip install -r requirements-ml.txt
+make ml-train
+make ml-score
+```
+
+Airflow retraining DAG:
+- `retail_ml_sales_retraining`
+
+Reference:
+- [docs/ml-integration.md](docs/ml-integration.md)
+- [models/README.md](models/README.md)
+
 ### SLA Targets
 
 - ETL availability SLA: **99.9% monthly uptime** for scheduled batch ETL jobs.
@@ -292,6 +309,15 @@ This platform is intentionally environment-driven. Do not hardcode deployment-sp
 - `WAREHOUSE_POSTGRES_DB`
 - `AWS_REGION`
 
+### ML Training
+
+- `AIRFLOW_ML_GOLD_DAILY_REVENUE_PATH`
+- `AIRFLOW_ML_MODEL_OUTPUT_DIR`
+- `AIRFLOW_ML_PREDICTION_OUTPUT_FILE`
+- `AIRFLOW_ML_TRAIN_EPOCHS`
+- `AIRFLOW_ML_TRAIN_BATCH_SIZE`
+- `AIRFLOW_ML_TRAIN_LEARNING_RATE`
+- `AIRFLOW_ML_TRAIN_VALIDATION_RATIO`
 Configuration templates and setup references:
 
 - [docs/aws-setup.md](docs/aws-setup.md)
@@ -313,6 +339,25 @@ Benchmark outputs:
 
 Benchmark details and advanced options:
 - [perf/README.md](perf/README.md)
+
+## ML Integration (PyTorch)
+
+Install ML dependencies:
+
+```bash
+pip install -r requirements-ml.txt
+```
+
+Train and score on Gold-layer sales data:
+
+```bash
+make ml-train
+make ml-score
+```
+
+Detailed guide:
+- [docs/ml-integration.md](docs/ml-integration.md)
+- [models/README.md](models/README.md)
 
 ## Chaos Engineering and SLA
 
@@ -397,6 +442,7 @@ Additional recommended practices:
 - Platform evolution roadmap: [docs/platform-evolution.md](docs/platform-evolution.md)
 - Cost/performance automation: [docs/cost-performance.md](docs/cost-performance.md)
 - Performance benchmarking: [perf/README.md](perf/README.md)
+- PyTorch ML integration: [docs/ml-integration.md](docs/ml-integration.md)
 - Chaos engineering runbook: [docs/chaos-engineering.md](docs/chaos-engineering.md)
 - Interactive GitHub Pages docs: [docs-site/README.md](docs-site/README.md)
 - AWS setup: [docs/aws-setup.md](docs/aws-setup.md)

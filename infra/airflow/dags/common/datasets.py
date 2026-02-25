@@ -41,3 +41,10 @@ PHASE3_COMPACTION_DATASET = Dataset(
         "s3://retail-loyalty-lakehouse/dev/ops/compaction",
     )
 )
+
+ML_SALES_MODEL_DATASET = Dataset(
+    os.getenv(
+        "AIRFLOW_DATASET_ML_SALES_MODEL",
+        "s3://retail-loyalty-lakehouse/dev/ml/sales-revenue-model",
+    )
+)

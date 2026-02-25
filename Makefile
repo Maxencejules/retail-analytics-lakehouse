@@ -2,7 +2,7 @@
 
 PYTHON ?= python
 VENV ?= .venv
-PROJECT_DIRS := ingestion spark warehouse dashboard infra tests scripts chaos
+PROJECT_DIRS := ingestion spark warehouse dashboard infra tests scripts chaos models
 DBT ?= dbt
 DOCKER_COMPOSE ?= docker compose
 SODA_CONFIG ?= quality/soda/configuration.yml
@@ -25,6 +25,14 @@ CHAOS_GREMLIN_ENDPOINT ?=
 CHAOS_PAYLOAD_FILE ?=
 CHAOS_OUTPUT_FILE ?=
 CHAOS_DRY_RUN ?= false
+ML_GOLD_DAILY_REVENUE_PATH ?= data/lakehouse/gold/daily_revenue_by_store
+ML_MODEL_OUTPUT_DIR ?= artifacts/models/sales_revenue_predictor
+ML_MODEL_EPOCHS ?= 30
+ML_MODEL_BATCH_SIZE ?= 64
+ML_MODEL_LEARNING_RATE ?= 0.001
+ML_MODEL_VALIDATION_RATIO ?= 0.2
+ML_MODEL_ARTIFACT ?=
+ML_PREDICTIONS_OUTPUT ?= artifacts/models/predictions/sales_predictions.jsonl
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN := $(VENV)/Scripts
@@ -39,7 +47,8 @@ PY := $(VENV_BIN)/python
 	airflow-dag-validate dbt-build dbt-docs soda-scan monitoring-up monitoring-down \
 	dbt-source-freshness dbt-phase2-gate dbt-governance-validate \
 	compact-lakehouse phase3-policy-validate phase3-gate platform-check \
-	dbt-slim-ci benchmark-etl chaos-run chaos-airflow-partition chaos-spark-crash
+	dbt-slim-ci benchmark-etl chaos-run chaos-airflow-partition chaos-spark-crash \
+	ml-train ml-score
 
 init:
 >$(PYTHON) -m venv $(VENV)
@@ -56,7 +65,7 @@ lint:
 >$(PY) -m black --check $(PROJECT_DIRS)
 
 test-unit:
->$(PY) -m pytest tests/ingestion tests/spark/batch -q
+>$(PY) -m pytest tests/ingestion tests/spark/batch tests/models -q
 
 test-integration:
 >$(PY) scripts/ci_integration_test.py --rows 1000
@@ -89,6 +98,22 @@ chaos-airflow-partition:
 chaos-spark-crash:
 >$(MAKE) chaos-run CHAOS_EXPERIMENT=spark_node_crash
 
+ml-train:
+>$(PY) models/train_sales_predictor.py \
+>	--gold-path $(ML_GOLD_DAILY_REVENUE_PATH) \
+>	--output-dir $(ML_MODEL_OUTPUT_DIR) \
+>	--epochs $(ML_MODEL_EPOCHS) \
+>	--batch-size $(ML_MODEL_BATCH_SIZE) \
+>	--learning-rate $(ML_MODEL_LEARNING_RATE) \
+>	--validation-ratio $(ML_MODEL_VALIDATION_RATIO)
+
+ml-score:
+>$(PY) models/score_sales_predictor.py \
+>	--gold-path $(ML_GOLD_DAILY_REVENUE_PATH) \
+>	--model-root $(ML_MODEL_OUTPUT_DIR) \
+>	--output-file $(ML_PREDICTIONS_OUTPUT) \
+>	$(if $(ML_MODEL_ARTIFACT),--model-artifact $(ML_MODEL_ARTIFACT),)
+
 precommit:
 >$(PY) -m pre_commit run --all-files
 
@@ -101,7 +126,8 @@ airflow-dag-validate:
 >	infra/airflow/dags/batch_etl_orchestration.py \
 >	infra/airflow/dags/batch_etl_backfill.py \
 >	infra/airflow/dags/environment_promotion_workflow.py \
->	infra/airflow/dags/cost_performance_optimization.py
+>	infra/airflow/dags/cost_performance_optimization.py \
+>	infra/airflow/dags/ml_sales_retraining.py
 
 dbt-build:
 >$(DBT) build --project-dir warehouse/dbt --profiles-dir warehouse/dbt/profiles --target $(DBT_TARGET)

@@ -33,6 +33,12 @@ This directory contains Airflow DAGs for production workflow orchestration.
   - Provider-native Spark compaction execution
   - Run metadata publication
 
+- [ml_sales_retraining.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/ml_sales_retraining.py)
+  - Dataset-aware model retraining triggered by Gold daily revenue updates
+  - PyTorch sales model training from Gold-layer outputs
+  - Automated model scoring after retraining
+  - Run metadata publication for ML auditability
+
 Shared callbacks:
 - [notifications.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/common/notifications.py)
 - [run_metadata.py](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/dags/common/run_metadata.py)
@@ -48,6 +54,7 @@ Shared callbacks:
 - `AIRFLOW_DATASET_GOLD_DAILY_REVENUE`
 - `AIRFLOW_DATASET_GOLD_TOP_PRODUCTS`
 - `AIRFLOW_DATASET_GOLD_CUSTOMER_LTV`
+- `AIRFLOW_DATASET_ML_SALES_MODEL`
 - `AIRFLOW_PROMOTION_ARTIFACT_TEMPLATE`
 - `AIRFLOW_PROMOTION_RECORD_TEMPLATE`
 - `AIRFLOW_COMPACTION_DATASETS`
@@ -62,6 +69,13 @@ Shared callbacks:
 - `OPENLINEAGE_NAMESPACE`
 - `DEPLOYMENT_GIT_SHA`
 - `DEPLOYMENT_RELEASE_VERSION`
+- `AIRFLOW_ML_GOLD_DAILY_REVENUE_PATH`
+- `AIRFLOW_ML_MODEL_OUTPUT_DIR`
+- `AIRFLOW_ML_PREDICTION_OUTPUT_FILE`
+- `AIRFLOW_ML_TRAIN_EPOCHS`
+- `AIRFLOW_ML_TRAIN_BATCH_SIZE`
+- `AIRFLOW_ML_TRAIN_LEARNING_RATE`
+- `AIRFLOW_ML_TRAIN_VALIDATION_RATIO`
 
 Environment template:
 - [airflow.env.example](C:/Users/USER/retail-analytics-lakehouse/infra/airflow/config/airflow.env.example)

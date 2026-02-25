@@ -35,6 +35,8 @@ Main targets:
 - `make test-unit`: run unit tests.
 - `make test-integration`: run end-to-end integration validation.
 - `make benchmark-etl`: run ETL benchmark and emit JSON/Markdown results in `perf/results/`.
+- `make ml-train`: train a PyTorch sales predictor on Gold-layer daily revenue data.
+- `make ml-score`: score Gold-layer examples using latest trained model artifact.
 - `make ci`: run lint + unit + integration checks.
 - `make airflow-dag-validate`: compile-check Airflow DAG Python files.
 - `make dbt-build DBT_TARGET=dev`: run dbt models + tests for a target.

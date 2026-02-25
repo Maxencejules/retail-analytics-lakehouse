@@ -57,6 +57,18 @@ Exit criteria:
 - ETL 99.9% availability SLA posture is measured and reported.
 - Recovery workflows are validated under partition/crash scenarios.
 
+### Phase 5: ML Operationalization (PyTorch Retraining on Gold Data)
+
+Scope:
+- Baseline PyTorch model training from Gold-layer marts.
+- Dataset-aware Airflow retraining DAG and scoring workflow.
+- Model artifact publication and metrics tracking for retraining runs.
+
+Exit criteria:
+- Automated retraining executes on Gold dataset updates.
+- Model artifacts and training metrics are versioned per run.
+- Operational runbook includes reproducible local and orchestrated ML commands.
+
 ## 1. Airflow Orchestration
 
 Artifacts:

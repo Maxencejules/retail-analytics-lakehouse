@@ -11,6 +11,7 @@ Production-grade monorepo for a modular retail analytics lakehouse spanning inge
 - [Local End-to-End Workflow](#local-end-to-end-workflow)
 - [Operational Runbook](#operational-runbook)
 - [Configuration](#configuration)
+- [Federated Queries with Trino](#federated-queries-with-trino)
 - [Quality Standards and CI](#quality-standards-and-ci)
 - [Security](#security)
 - [Documentation](#documentation)
@@ -31,6 +32,7 @@ Core capabilities:
 - Airflow DAGs for daily execution, backfills, and environment promotion.
 - Soda quality scans, Prometheus/Grafana monitoring, and OpenLineage metadata support.
 - Executive dashboard consuming either warehouse or Gold datasets.
+- Trino federation across warehouse tables, lakehouse parquet outputs, and external object-store snapshots.
 
 ## Architecture
 
@@ -63,6 +65,7 @@ Detailed architecture references:
 | `warehouse/dbt/` | dbt models, tests, snapshots, semantic models, exposures, selectors. |
 | `infra/airflow/` | DAGs for orchestration, promotion workflows, run metadata, and optimization. |
 | `infra/monitoring/` | Monitoring and lineage stack assets (Prometheus, Grafana, Alertmanager, OpenLineage). |
+| `infra/trino/` | Trino catalog configuration for federated SQL across Postgres and Spark outputs. |
 | `infra/aws/` | AWS environment templates, IAM/policy examples, runtime configuration helpers. |
 | `quality/soda/` | Soda quality definitions and alert routing templates. |
 | `dashboard/` | Streamlit dashboard and data-access layer for KPI consumption. |
@@ -207,6 +210,16 @@ make monitoring-down
 
 Reference: [infra/monitoring/README.md](infra/monitoring/README.md)
 
+### Federated Queries with Trino
+
+```bash
+docker compose up -d warehouse hive-metastore spark trino
+docker compose exec trino trino
+```
+
+Federation guide and SQL examples:
+- [docs/federated-querying.md](docs/federated-querying.md)
+
 ### Cost and Performance Controls
 
 ```bash
@@ -248,6 +261,13 @@ This platform is intentionally environment-driven. Do not hardcode deployment-sp
 - `WAREHOUSE_DSN`
 - `WAREHOUSE_SCHEMA`
 - `GOLD_BASE_PATH`
+
+### Trino Federation
+
+- `WAREHOUSE_POSTGRES_USER`
+- `WAREHOUSE_POSTGRES_PASSWORD`
+- `WAREHOUSE_POSTGRES_DB`
+- `AWS_REGION`
 
 Configuration templates and setup references:
 
@@ -299,6 +319,7 @@ Additional recommended practices:
 - Platform evolution roadmap: [docs/platform-evolution.md](docs/platform-evolution.md)
 - Cost/performance automation: [docs/cost-performance.md](docs/cost-performance.md)
 - AWS setup: [docs/aws-setup.md](docs/aws-setup.md)
+- Federated querying with Trino: [docs/federated-querying.md](docs/federated-querying.md)
 - CI/CD quality gates: [docs/ci-cd.md](docs/ci-cd.md)
 - Airflow orchestration: [infra/airflow/README.md](infra/airflow/README.md)
 - dbt warehouse: [warehouse/dbt/README.md](warehouse/dbt/README.md)

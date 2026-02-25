@@ -21,12 +21,40 @@ services:
     ports:
       - "9092:9092"
 
+  warehouse:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${WAREHOUSE_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${WAREHOUSE_POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${WAREHOUSE_POSTGRES_DB:-retail_analytics}
+    ports:
+      - "5432:5432"
+    volumes:
+      - warehouse-data:/var/lib/postgresql/data
+      - ./warehouse/postgres/01_ddl_star_schema.sql:/docker-entrypoint-initdb.d/01_ddl_star_schema.sql:ro
+      - ./warehouse/postgres/02_index_strategy.sql:/docker-entrypoint-initdb.d/02_index_strategy.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${WAREHOUSE_POSTGRES_USER:-postgres} -d ${WAREHOUSE_POSTGRES_DB:-retail_analytics}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  hive-metastore:
+    image: apache/hive:4.0.0
+    environment:
+      SERVICE_NAME: metastore
+    ports:
+      - "9083:9083"
+    volumes:
+      - hive-metastore-warehouse:/opt/hive/data/warehouse
+
   spark:
     build:
       context: .
       dockerfile: Dockerfile.spark
     depends_on:
       - kafka
+      - warehouse
     working_dir: /opt/retail-analytics-lakehouse
     environment:
       APP_ENV: ${APP_ENV:-dev}
@@ -42,3 +70,28 @@ services:
       - ${HOME}/.aws:/root/.aws:ro
     command: ["sleep", "infinity"]
 
+  trino:
+    image: trinodb/trino:447
+    depends_on:
+      warehouse:
+        condition: service_healthy
+      hive-metastore:
+        condition: service_started
+    environment:
+      TRINO_PG_HOST: warehouse
+      TRINO_PG_PORT: "5432"
+      TRINO_PG_DB: ${WAREHOUSE_POSTGRES_DB:-retail_analytics}
+      TRINO_PG_USER: ${WAREHOUSE_POSTGRES_USER:-postgres}
+      TRINO_PG_PASSWORD: ${WAREHOUSE_POSTGRES_PASSWORD:-postgres}
+      AWS_REGION: ${AWS_REGION:-ca-central-1}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ca-central-1}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/trino/catalog:/etc/trino/catalog:ro
+      - ./data/lakehouse:/lakehouse:ro
+      - ${HOME}/.aws:/home/trino/.aws:ro
+
+volumes:
+  warehouse-data:
+  hive-metastore-warehouse:

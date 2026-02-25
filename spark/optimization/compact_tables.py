@@ -76,7 +76,9 @@ class CompactionConfig:
         if not self.datasets:
             raise ValueError("at least one dataset is required")
 
-        invalid = [dataset for dataset in self.datasets if dataset not in DATASET_CATALOG]
+        invalid = [
+            dataset for dataset in self.datasets if dataset not in DATASET_CATALOG
+        ]
         if invalid:
             raise ValueError(f"unknown datasets: {', '.join(invalid)}")
 
@@ -101,7 +103,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
         description="Compact Silver/Gold datasets to control small-file proliferation."
     )
     parser.add_argument("--base-path", default="data/lakehouse")
-    parser.add_argument("--table-format", default="parquet", choices=("parquet", "delta"))
+    parser.add_argument(
+        "--table-format", default="parquet", choices=("parquet", "delta")
+    )
     parser.add_argument(
         "--datasets",
         default=",".join(DEFAULT_DATASETS),
@@ -387,9 +391,7 @@ def _compact_latest_partition(
         max_file_count=config.max_file_count,
     )
 
-    partition_df = (
-        df.where(F.col(spec.partition_column) == F.lit(latest_value)).cache()
-    )
+    partition_df = df.where(F.col(spec.partition_column) == F.lit(latest_value)).cache()
     row_count = partition_df.count()
     if row_count == 0:
         partition_df.unpersist()
@@ -447,7 +449,11 @@ def run_compaction(config: CompactionConfig) -> list[CompactionResult]:
             dataset_path = f"{config.base_path.rstrip('/')}/{spec.relative_path}"
 
             if not _path_exists(spark, dataset_path):
-                LOGGER.warning("dataset_path_missing dataset=%s path=%s", dataset_name, dataset_path)
+                LOGGER.warning(
+                    "dataset_path_missing dataset=%s path=%s",
+                    dataset_name,
+                    dataset_path,
+                )
                 results.append(
                     CompactionResult(
                         dataset_name=dataset_name,
@@ -464,7 +470,9 @@ def run_compaction(config: CompactionConfig) -> list[CompactionResult]:
                 if config.full_dataset:
                     result = _compact_full_dataset(spark, config, dataset_path, spec)
                 else:
-                    result = _compact_latest_partition(spark, config, dataset_path, spec)
+                    result = _compact_latest_partition(
+                        spark, config, dataset_path, spec
+                    )
                 results.append(result)
                 LOGGER.info(
                     "compaction_result dataset=%s status=%s scope=%s rows=%s "

@@ -28,4 +28,3 @@ select
         order by revenue_30d desc, units_30d desc, product_id asc
     ) as rank_30d
 from base
-

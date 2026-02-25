@@ -98,7 +98,9 @@ def _resolve_spark_container(repo_root: Path, dry_run: bool) -> str:
     return container_id
 
 
-def _run_local_airflow_partition(config: ExperimentConfig, repo_root: Path) -> dict[str, Any]:
+def _run_local_airflow_partition(
+    config: ExperimentConfig, repo_root: Path
+) -> dict[str, Any]:
     target_container = config.target_container or os.getenv(
         "CHAOS_AIRFLOW_CONTAINER",
         "airflow-webserver",
@@ -129,7 +131,9 @@ def _run_local_airflow_partition(config: ExperimentConfig, repo_root: Path) -> d
 
 
 def _run_local_spark_crash(config: ExperimentConfig, repo_root: Path) -> dict[str, Any]:
-    target = config.target_container or _resolve_spark_container(repo_root, config.dry_run)
+    target = config.target_container or _resolve_spark_container(
+        repo_root, config.dry_run
+    )
     report: dict[str, Any] = {
         "experiment": config.experiment,
         "mode": config.mode,
@@ -273,7 +277,9 @@ def run_experiment(config: ExperimentConfig) -> Path:
         elif config.experiment == EXPERIMENT_SPARK_NODE_CRASH:
             report = _run_local_spark_crash(config, repo_root)
         else:
-            raise ValueError(f"Unsupported local-docker experiment: {config.experiment}")
+            raise ValueError(
+                f"Unsupported local-docker experiment: {config.experiment}"
+            )
     elif config.mode == "gremlin-http":
         report = _run_gremlin_http(config)
     else:

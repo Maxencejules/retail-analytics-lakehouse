@@ -21,4 +21,3 @@ select
     source_updated_at
 from ranked
 where row_num = 1 and product_id is not null and product_id <> ''
-

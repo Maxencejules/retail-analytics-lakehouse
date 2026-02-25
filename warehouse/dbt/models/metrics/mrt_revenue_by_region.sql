@@ -12,4 +12,3 @@ inner join {{ ref('dim_store') }} ds
 group by
     dt.full_date,
     ds.region
-

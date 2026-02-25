@@ -4,4 +4,3 @@ from spark.batch.config import PipelineConfig
 from spark.batch.pipeline import run_pipeline
 
 __all__ = ["PipelineConfig", "run_pipeline"]
-

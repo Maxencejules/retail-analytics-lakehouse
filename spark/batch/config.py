@@ -36,7 +36,9 @@ class PipelineConfig:
             raise ValueError("output_base_path cannot be empty")
 
         if self.output_target == "s3" and not self.output_base_path.startswith("s3://"):
-            raise ValueError("s3 output_target requires output_base_path starting with s3://")
+            raise ValueError(
+                "s3 output_target requires output_base_path starting with s3://"
+            )
 
         if self.output_target == "local" and self.output_base_path.startswith("s3://"):
             raise ValueError("local output_target cannot use an s3:// output_base_path")
@@ -77,8 +79,12 @@ class PipelineConfig:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Retail transactions batch ETL pipeline.")
-    parser.add_argument("--input-path", required=True, help="Raw input path (local path or s3://).")
+    parser = argparse.ArgumentParser(
+        description="Retail transactions batch ETL pipeline."
+    )
+    parser.add_argument(
+        "--input-path", required=True, help="Raw input path (local path or s3://)."
+    )
     parser.add_argument(
         "--input-format",
         default="csv",
@@ -142,4 +148,3 @@ def parse_config(argv: list[str] | None = None) -> PipelineConfig:
     )
     config.validate()
     return config
-

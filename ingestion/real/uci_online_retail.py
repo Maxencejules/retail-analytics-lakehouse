@@ -192,7 +192,11 @@ def resolve_column_mapping(fieldnames: Sequence[str]) -> dict[str, str]:
     for canonical in SOURCE_REQUIRED_COLUMNS:
         candidates = SOURCE_HEADER_CANDIDATES[canonical]
         matched = next(
-            (normalized_to_original[name] for name in candidates if name in normalized_to_original),
+            (
+                normalized_to_original[name]
+                for name in candidates
+                if name in normalized_to_original
+            ),
             None,
         )
         if matched is None:
@@ -292,7 +296,9 @@ def convert_uci_csv(
 
         input_rows = 0
         output_rows = 0
-        with gzip.open(output_path, mode="wt", encoding="utf-8", newline="") as output_handle:
+        with gzip.open(
+            output_path, mode="wt", encoding="utf-8", newline=""
+        ) as output_handle:
             writer = csv.DictWriter(
                 output_handle,
                 fieldnames=list(TRANSACTION_FIELD_ORDER),

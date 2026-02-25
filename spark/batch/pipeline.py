@@ -8,7 +8,12 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 
 from spark.batch.config import PipelineConfig
-from spark.batch.io import ensure_delta_available, read_dataset, read_raw_transactions, write_dataset
+from spark.batch.io import (
+    ensure_delta_available,
+    read_dataset,
+    read_raw_transactions,
+    write_dataset,
+)
 from spark.batch.transforms import (
     build_gold_customer_lifetime_value,
     build_gold_daily_revenue_by_store,
@@ -82,14 +87,11 @@ def run_pipeline(config: PipelineConfig) -> None:
             mode="overwrite",
         )
 
-        bronze_current_df = (
-            read_dataset(
-                spark,
-                path=config.bronze_transactions_path,
-                table_format=config.table_format,
-            )
-            .where(F.col("ingestion_date") == F.to_date(F.lit(config.ingestion_date)))
-        )
+        bronze_current_df = read_dataset(
+            spark,
+            path=config.bronze_transactions_path,
+            table_format=config.table_format,
+        ).where(F.col("ingestion_date") == F.to_date(F.lit(config.ingestion_date)))
         _log_count("bronze_transactions_ingestion_partition", bronze_current_df.count())
 
         silver_df = transform_bronze_to_silver(

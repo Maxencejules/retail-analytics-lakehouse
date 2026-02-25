@@ -23,7 +23,9 @@ def _build_parser() -> argparse.ArgumentParser:
         description="Generate synthetic retail transactions (batch or stream)."
     )
     parser.add_argument("--mode", choices=("batch", "stream"), required=True)
-    parser.add_argument("--seed", type=int, default=42, help="Random seed for determinism.")
+    parser.add_argument(
+        "--seed", type=int, default=42, help="Random seed for determinism."
+    )
     parser.add_argument(
         "--log-level",
         default="INFO",
@@ -151,4 +153,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

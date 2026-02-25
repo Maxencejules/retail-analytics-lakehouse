@@ -32,4 +32,3 @@ select
     store_format,
     current_timestamp as updated_at
 from source_data
-

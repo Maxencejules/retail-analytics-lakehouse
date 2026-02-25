@@ -28,4 +28,3 @@ select
     cast(extract(year from event_date) as integer) as year_num,
     (extract(isodow from event_date) in (6, 7)) as is_weekend
 from source_dates
-

@@ -70,4 +70,3 @@ select
     ingestion_date,
     current_timestamp as updated_at
 from resolved
-

@@ -6,4 +6,3 @@ openlineage:
   namespace: retail-analytics-lakehouse
   disable_source_code: false
   include_full_task_info: true
-

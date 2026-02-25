@@ -35,7 +35,10 @@ class DashboardConfig:
         if self.cache_ttl_seconds <= 0:
             raise ValueError("DASHBOARD_CACHE_TTL_SECONDS must be > 0")
         if self.data_source == "warehouse" and not self.warehouse_dsn:
-            raise ValueError("WAREHOUSE_DSN is required when DASHBOARD_DATA_SOURCE=warehouse")
+            raise ValueError(
+                "WAREHOUSE_DSN is required when DASHBOARD_DATA_SOURCE=warehouse"
+            )
         if self.data_source == "gold" and not self.gold_base_path:
-            raise ValueError("GOLD_BASE_PATH is required when DASHBOARD_DATA_SOURCE=gold")
-
+            raise ValueError(
+                "GOLD_BASE_PATH is required when DASHBOARD_DATA_SOURCE=gold"
+            )

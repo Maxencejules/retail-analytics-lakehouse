@@ -72,4 +72,3 @@ where
     and channel in ('online', 'store')
     and payment_method in ('credit_card', 'debit_card', 'cash', 'mobile_wallet')
     and currency in ('CAD', 'USD')
-

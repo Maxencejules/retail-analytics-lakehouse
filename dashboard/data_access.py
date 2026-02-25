@@ -55,7 +55,9 @@ class DashboardRepository(ABC):
         """Return top stores by revenue."""
 
     @abstractmethod
-    def top_products(self, filters: DashboardFilters, *, limit: int = 5) -> pd.DataFrame:
+    def top_products(
+        self, filters: DashboardFilters, *, limit: int = 5
+    ) -> pd.DataFrame:
         """Return top products by revenue."""
 
     @abstractmethod
@@ -87,7 +89,11 @@ class PostgresWarehouseRepository(DashboardRepository):
             INNER JOIN {self.schema}.dim_time dt ON dt.time_sk = fs.time_sk
         """
         frame = pd.read_sql_query(query, self._engine)
-        if frame.empty or frame.loc[0, "min_date"] is None or frame.loc[0, "max_date"] is None:
+        if (
+            frame.empty
+            or frame.loc[0, "min_date"] is None
+            or frame.loc[0, "max_date"] is None
+        ):
             raise ValueError("No data found in warehouse fact_sales")
 
         return frame.loc[0, "min_date"], frame.loc[0, "max_date"]
@@ -144,7 +150,9 @@ class PostgresWarehouseRepository(DashboardRepository):
         """
         return pd.read_sql_query(query, self._engine, params=params)
 
-    def top_products(self, filters: DashboardFilters, *, limit: int = 5) -> pd.DataFrame:
+    def top_products(
+        self, filters: DashboardFilters, *, limit: int = 5
+    ) -> pd.DataFrame:
         where_clause, params = self._fact_filter_sql(filters)
         params["limit"] = limit
         query = f"""
@@ -182,7 +190,9 @@ class PostgresWarehouseRepository(DashboardRepository):
         return frame
 
     @staticmethod
-    def _time_filter_sql(filters: DashboardFilters | None) -> tuple[str, dict[str, Any]]:
+    def _time_filter_sql(
+        filters: DashboardFilters | None,
+    ) -> tuple[str, dict[str, Any]]:
         if filters is None:
             return "", {}
         filters.validate()
@@ -221,7 +231,9 @@ class GoldLayerRepository(DashboardRepository):
         try:
             import duckdb
         except ImportError as exc:  # pragma: no cover
-            raise RuntimeError("duckdb is required for gold mode. Install with: pip install duckdb") from exc
+            raise RuntimeError(
+                "duckdb is required for gold mode. Install with: pip install duckdb"
+            ) from exc
 
         self._duckdb = duckdb
         self.gold_base_path = gold_base_path.rstrip("/")
@@ -242,7 +254,11 @@ class GoldLayerRepository(DashboardRepository):
             FROM read_parquet('{self.daily_store_path}')
         """
         frame = self._connection.execute(query).fetchdf()
-        if frame.empty or pd.isna(frame.loc[0, "min_date"]) or pd.isna(frame.loc[0, "max_date"]):
+        if (
+            frame.empty
+            or pd.isna(frame.loc[0, "min_date"])
+            or pd.isna(frame.loc[0, "max_date"])
+        ):
             raise ValueError("No data found in Gold layer daily_revenue_by_store")
         return frame.loc[0, "min_date"], frame.loc[0, "max_date"]
 
@@ -301,7 +317,9 @@ class GoldLayerRepository(DashboardRepository):
         """
         return self._connection.execute(query).fetchdf()
 
-    def top_products(self, filters: DashboardFilters, *, limit: int = 5) -> pd.DataFrame:
+    def top_products(
+        self, filters: DashboardFilters, *, limit: int = 5
+    ) -> pd.DataFrame:
         filters.validate()
         query = f"""
             SELECT

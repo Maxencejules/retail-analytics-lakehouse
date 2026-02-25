@@ -113,15 +113,21 @@ class SparkPerformanceProfile:
         profile = cls.defaults(os.getenv("SPARK_WORKLOAD_PROFILE", "balanced"))
         overridden = replace(
             profile,
-            adaptive_enabled=_env_bool("SPARK_ADAPTIVE_ENABLED", profile.adaptive_enabled),
+            adaptive_enabled=_env_bool(
+                "SPARK_ADAPTIVE_ENABLED", profile.adaptive_enabled
+            ),
             dynamic_allocation_enabled=_env_bool(
                 "SPARK_DYNAMIC_ALLOCATION_ENABLED",
                 profile.dynamic_allocation_enabled,
             ),
             min_executors=_env_int("SPARK_MIN_EXECUTORS", profile.min_executors),
-            initial_executors=_env_int("SPARK_INITIAL_EXECUTORS", profile.initial_executors),
+            initial_executors=_env_int(
+                "SPARK_INITIAL_EXECUTORS", profile.initial_executors
+            ),
             max_executors=_env_int("SPARK_MAX_EXECUTORS", profile.max_executors),
-            shuffle_partitions=_env_int("SPARK_SHUFFLE_PARTITIONS", profile.shuffle_partitions),
+            shuffle_partitions=_env_int(
+                "SPARK_SHUFFLE_PARTITIONS", profile.shuffle_partitions
+            ),
             max_partition_bytes_mb=_env_int(
                 "SPARK_MAX_PARTITION_BYTES_MB",
                 profile.max_partition_bytes_mb,
@@ -162,13 +168,17 @@ def apply_performance_profile(builder: Any, profile: SparkPerformanceProfile) ->
     profile.validate()
     conf = {
         "spark.sql.adaptive.enabled": str(profile.adaptive_enabled).lower(),
-        "spark.dynamicAllocation.enabled": str(profile.dynamic_allocation_enabled).lower(),
+        "spark.dynamicAllocation.enabled": str(
+            profile.dynamic_allocation_enabled
+        ).lower(),
         "spark.dynamicAllocation.minExecutors": str(profile.min_executors),
         "spark.dynamicAllocation.initialExecutors": str(profile.initial_executors),
         "spark.dynamicAllocation.maxExecutors": str(profile.max_executors),
         "spark.dynamicAllocation.shuffleTracking.enabled": "true",
         "spark.sql.shuffle.partitions": str(profile.shuffle_partitions),
-        "spark.sql.files.maxPartitionBytes": str(profile.max_partition_bytes_mb * 1024 * 1024),
+        "spark.sql.files.maxPartitionBytes": str(
+            profile.max_partition_bytes_mb * 1024 * 1024
+        ),
         "spark.sql.autoBroadcastJoinThreshold": str(
             profile.auto_broadcast_join_threshold_mb * 1024 * 1024
         ),

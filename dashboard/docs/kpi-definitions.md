@@ -71,4 +71,3 @@ Formula per day:
 
 Visualization:
 - Line chart with daily points ordered by date.
-

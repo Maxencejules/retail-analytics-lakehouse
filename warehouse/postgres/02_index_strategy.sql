@@ -46,4 +46,3 @@ CREATE INDEX IF NOT EXISTS idx_dim_customer_segment
 
 CREATE INDEX IF NOT EXISTS idx_dim_time_full_date
     ON warehouse.dim_time (full_date);
-

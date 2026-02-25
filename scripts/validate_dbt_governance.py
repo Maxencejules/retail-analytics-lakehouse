@@ -99,14 +99,20 @@ def _validate_exposure(exposure_doc: dict[str, Any]) -> list[str]:
     depends_on = dashboard.get("depends_on", [])
     owner = dashboard.get("owner", {})
     if not isinstance(depends_on, list) or len(depends_on) < 1:
-        errors.append("exposures.yml: executive_retail_dashboard must depend on models.")
+        errors.append(
+            "exposures.yml: executive_retail_dashboard must depend on models."
+        )
     if not isinstance(owner, dict) or not str(owner.get("email", "")).strip():
-        errors.append("exposures.yml: executive_retail_dashboard owner email is required.")
+        errors.append(
+            "exposures.yml: executive_retail_dashboard owner email is required."
+        )
     return errors
 
 
 def run_validation(root: Path) -> list[str]:
-    marts_schema = _load_yaml(root / "warehouse" / "dbt" / "models" / "marts" / "schema.yml")
+    marts_schema = _load_yaml(
+        root / "warehouse" / "dbt" / "models" / "marts" / "schema.yml"
+    )
     metrics_schema = _load_yaml(
         root / "warehouse" / "dbt" / "models" / "metrics" / "schema.yml"
     )
@@ -136,7 +142,9 @@ def run_validation(root: Path) -> list[str]:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Validate dbt Phase 2 governance assets.")
+    parser = argparse.ArgumentParser(
+        description="Validate dbt Phase 2 governance assets."
+    )
     parser.add_argument(
         "--repo-root",
         default=".",

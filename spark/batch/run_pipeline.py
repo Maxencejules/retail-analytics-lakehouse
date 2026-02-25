@@ -22,7 +22,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     logger = configure_logging(config.log_level)
     logger.info(
         "batch_cli_start",
-        extra={"context": {"app_name": config.app_name, "ingestion_date": config.ingestion_date}},
+        extra={
+            "context": {
+                "app_name": config.app_name,
+                "ingestion_date": config.ingestion_date,
+            }
+        },
     )
     run_pipeline(config)
     return 0
@@ -30,4 +35,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-

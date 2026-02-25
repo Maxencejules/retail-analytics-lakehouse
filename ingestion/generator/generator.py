@@ -89,4 +89,3 @@ class TransactionGenerator:
         if rows <= 0:
             raise ValueError("rows must be > 0")
         return [self.generate_event() for _ in range(rows)]
-

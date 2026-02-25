@@ -4,7 +4,11 @@ from datetime import date
 
 import numpy as np
 
-from models.sales_features import FEATURE_NAMES, SalesDailyRecord, build_lagged_sales_examples
+from models.sales_features import (
+    FEATURE_NAMES,
+    SalesDailyRecord,
+    build_lagged_sales_examples,
+)
 
 
 def test_build_lagged_sales_examples_creates_expected_samples() -> None:
@@ -63,4 +67,3 @@ def test_build_lagged_sales_examples_creates_expected_samples() -> None:
             dtype=np.float32,
         ),
     )
-

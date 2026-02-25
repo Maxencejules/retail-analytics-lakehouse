@@ -15,4 +15,3 @@ datasources:
       authType: default
       defaultRegion: ca-central-1
     editable: true
-

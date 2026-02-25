@@ -15,7 +15,9 @@ import uuid
 LOGGER = logging.getLogger("scripts.ci_integration_test")
 
 
-def _run(cmd: list[str], *, expect_success: bool = True) -> subprocess.CompletedProcess[str]:
+def _run(
+    cmd: list[str], *, expect_success: bool = True
+) -> subprocess.CompletedProcess[str]:
     LOGGER.info("running_command command=%s", " ".join(cmd))
     completed = subprocess.run(cmd, check=False, text=True)
     if expect_success and completed.returncode != 0:
@@ -37,12 +39,16 @@ def _assert_gold_outputs_exist(gold_root: Path) -> None:
     try:
         import pyarrow.dataset as ds
     except ImportError as exc:
-        raise RuntimeError("pyarrow is required for integration output validation") from exc
+        raise RuntimeError(
+            "pyarrow is required for integration output validation"
+        ) from exc
 
     for dataset_path in expected:
         parquet_files = list(dataset_path.rglob("*.parquet"))
         if not parquet_files:
-            raise RuntimeError(f"No Parquet files found for expected Gold dataset: {dataset_path}")
+            raise RuntimeError(
+                f"No Parquet files found for expected Gold dataset: {dataset_path}"
+            )
 
         rows = ds.dataset(str(dataset_path), format="parquet").count_rows()
         if rows <= 0:
@@ -168,13 +174,19 @@ def run_integration_test(rows: int) -> None:
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run CI integration checks for ETL pipeline.")
-    parser.add_argument("--rows", type=int, default=1000, help="Number of generated rows.")
+    parser = argparse.ArgumentParser(
+        description="Run CI integration checks for ETL pipeline."
+    )
+    parser.add_argument(
+        "--rows", type=int, default=1000, help="Number of generated rows."
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s"
+    )
     args = parse_args(argv)
     if args.rows <= 0:
         raise ValueError("--rows must be > 0")
@@ -184,4 +196,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-

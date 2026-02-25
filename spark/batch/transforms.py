@@ -75,16 +75,33 @@ def _cast_bronze_to_silver(bronze_df: DataFrame) -> DataFrame:
 def _annotate_quality_errors(df: DataFrame) -> DataFrame:
     return df.withColumn(
         "dq_error",
-        F.when(F.col("transaction_id").isNull() | (F.col("transaction_id") == ""), "missing_transaction_id")
+        F.when(
+            F.col("transaction_id").isNull() | (F.col("transaction_id") == ""),
+            "missing_transaction_id",
+        )
         .when(F.col("ts_utc").isNull(), "invalid_ts_utc")
-        .when(F.col("store_id").isNull() | (F.col("store_id") == ""), "missing_store_id")
-        .when(F.col("customer_id").isNull() | (F.col("customer_id") == ""), "missing_customer_id")
-        .when(F.col("product_id").isNull() | (F.col("product_id") == ""), "missing_product_id")
+        .when(
+            F.col("store_id").isNull() | (F.col("store_id") == ""), "missing_store_id"
+        )
+        .when(
+            F.col("customer_id").isNull() | (F.col("customer_id") == ""),
+            "missing_customer_id",
+        )
+        .when(
+            F.col("product_id").isNull() | (F.col("product_id") == ""),
+            "missing_product_id",
+        )
         .when(F.col("quantity").isNull() | (F.col("quantity") <= 0), "invalid_quantity")
-        .when(F.col("unit_price").isNull() | (F.col("unit_price") <= 0), "invalid_unit_price")
+        .when(
+            F.col("unit_price").isNull() | (F.col("unit_price") <= 0),
+            "invalid_unit_price",
+        )
         .when(F.col("revenue").isNull() | (F.col("revenue") < 0), "invalid_revenue")
         .when(~F.col("currency").isin(*ALLOWED_CURRENCIES), "invalid_currency")
-        .when(~F.col("payment_method").isin(*ALLOWED_PAYMENT_METHODS), "invalid_payment_method")
+        .when(
+            ~F.col("payment_method").isin(*ALLOWED_PAYMENT_METHODS),
+            "invalid_payment_method",
+        )
         .when(~F.col("channel").isin(*ALLOWED_CHANNELS), "invalid_channel")
         .otherwise(F.lit(None)),
     )
@@ -95,9 +112,13 @@ def _fail_fast_if_invalid(df: DataFrame, *, stage: str) -> None:
     if invalid.limit(1).count() == 0:
         return
 
-    summary_rows = invalid.groupBy("dq_error").count().orderBy(F.desc("count")).collect()
+    summary_rows = (
+        invalid.groupBy("dq_error").count().orderBy(F.desc("count")).collect()
+    )
     summary = ", ".join(f"{row['dq_error']}={row['count']}" for row in summary_rows)
-    raise DataQualityError(f"{stage}: critical data quality violations found: {summary}")
+    raise DataQualityError(
+        f"{stage}: critical data quality violations found: {summary}"
+    )
 
 
 def _deduplicate_transactions(df: DataFrame) -> DataFrame:
@@ -114,7 +135,9 @@ def _deduplicate_transactions(df: DataFrame) -> DataFrame:
     )
 
 
-def transform_bronze_to_silver(bronze_df: DataFrame, *, fail_fast_quality: bool = True) -> DataFrame:
+def transform_bronze_to_silver(
+    bronze_df: DataFrame, *, fail_fast_quality: bool = True
+) -> DataFrame:
     """Transform Bronze raw data into validated, typed Silver records."""
     validate_required_columns(
         bronze_df,
@@ -192,7 +215,9 @@ def build_gold_top_10_products_by_day(silver_df: DataFrame) -> DataFrame:
     )
 
 
-def build_gold_customer_lifetime_value(silver_df: DataFrame, *, snapshot_date: str) -> DataFrame:
+def build_gold_customer_lifetime_value(
+    silver_df: DataFrame, *, snapshot_date: str
+) -> DataFrame:
     """Compute customer lifetime value as cumulative revenue across all transactions."""
     return (
         silver_df.groupBy("customer_id")

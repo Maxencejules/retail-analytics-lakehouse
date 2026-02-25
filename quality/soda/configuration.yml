@@ -6,4 +6,3 @@
   password: ${WAREHOUSE_PASSWORD}
   database: ${WAREHOUSE_DB}
   schema: ${WAREHOUSE_SCHEMA}
-

@@ -188,7 +188,9 @@ def _publish_run_metadata() -> None:
         "data_interval_start_utc": (
             data_interval_start.isoformat() if data_interval_start else None
         ),
-        "data_interval_end_utc": data_interval_end.isoformat() if data_interval_end else None,
+        "data_interval_end_utc": (
+            data_interval_end.isoformat() if data_interval_end else None
+        ),
         "ingestion_date": ingestion_date,
         "input_path": input_template.replace("{ds}", ingestion_date),
         "output_base_path": output_base_path,
@@ -287,5 +289,15 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
-    start >> dependency_check >> run_batch_etl >> validate_gold_outputs >> run_data_quality_scan
-    [dependency_check, run_batch_etl, validate_gold_outputs, run_data_quality_scan] >> publish_run_metadata >> finish
+    (
+        start
+        >> dependency_check
+        >> run_batch_etl
+        >> validate_gold_outputs
+        >> run_data_quality_scan
+    )
+    (
+        [dependency_check, run_batch_etl, validate_gold_outputs, run_data_quality_scan]
+        >> publish_run_metadata
+        >> finish
+    )

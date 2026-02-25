@@ -58,7 +58,9 @@ def _validate_spark_policy(policy: dict[str, Any]) -> list[str]:
                 errors.append("spark workload class missing profile_override.")
             sla = workload.get("sla_minutes")
             if not isinstance(sla, int) or sla <= 0:
-                errors.append("spark workload class sla_minutes must be a positive integer.")
+                errors.append(
+                    "spark workload class sla_minutes must be a positive integer."
+                )
 
     return errors
 
@@ -79,11 +81,15 @@ def _validate_redshift_wlm(policy: dict[str, Any]) -> list[str]:
 
         concurrency = queue.get("query_concurrency")
         if not isinstance(concurrency, int) or concurrency <= 0:
-            errors.append("redshift queue query_concurrency must be a positive integer.")
+            errors.append(
+                "redshift queue query_concurrency must be a positive integer."
+            )
 
         memory = queue.get("memory_percent_to_use")
         if not isinstance(memory, int) or memory <= 0:
-            errors.append("redshift queue memory_percent_to_use must be a positive integer.")
+            errors.append(
+                "redshift queue memory_percent_to_use must be a positive integer."
+            )
         else:
             memory_total += memory
 
@@ -107,10 +113,14 @@ def _validate_lifecycle_policy(policy: dict[str, Any]) -> list[str]:
             errors.append("lifecycle rule entries must be objects.")
             continue
         if rule.get("Status") != "Enabled":
-            errors.append(f"lifecycle rule {rule.get('ID', 'unknown')} must be Enabled.")
+            errors.append(
+                f"lifecycle rule {rule.get('ID', 'unknown')} must be Enabled."
+            )
 
         filter_object = rule.get("Filter", {})
-        prefix = filter_object.get("Prefix") if isinstance(filter_object, dict) else None
+        prefix = (
+            filter_object.get("Prefix") if isinstance(filter_object, dict) else None
+        )
         if isinstance(prefix, str):
             found_prefixes.add(prefix)
 
@@ -126,7 +136,9 @@ def _validate_lifecycle_policy(policy: dict[str, Any]) -> list[str]:
                         continue
                     days = transition.get("Days")
                     if not isinstance(days, int) or days <= 0:
-                        errors.append("lifecycle transition Days must be a positive integer.")
+                        errors.append(
+                            "lifecycle transition Days must be a positive integer."
+                        )
                         continue
                     transition_days.append(days)
                 if transition_days != sorted(transition_days):
@@ -142,7 +154,9 @@ def _validate_lifecycle_policy(policy: dict[str, Any]) -> list[str]:
 
     missing = required_prefixes - found_prefixes
     if missing:
-        errors.append(f"lifecycle policy missing prefixes: {', '.join(sorted(missing))}.")
+        errors.append(
+            f"lifecycle policy missing prefixes: {', '.join(sorted(missing))}."
+        )
 
     return errors
 
@@ -166,7 +180,9 @@ def _validate_budget_policy(policy: dict[str, Any]) -> list[str]:
 
         threshold = notification.get("threshold_percent")
         if not isinstance(threshold, int) or threshold <= 0 or threshold > 100:
-            errors.append("budget notification threshold_percent must be between 1 and 100.")
+            errors.append(
+                "budget notification threshold_percent must be between 1 and 100."
+            )
         else:
             thresholds.append(threshold)
 
@@ -180,7 +196,9 @@ def _validate_budget_policy(policy: dict[str, Any]) -> list[str]:
     if thresholds != sorted(thresholds):
         errors.append("budget notification thresholds must be sorted ascending.")
     if not has_forecasted:
-        errors.append("budget policy should include at least one FORECASTED notification.")
+        errors.append(
+            "budget policy should include at least one FORECASTED notification."
+        )
     return errors
 
 

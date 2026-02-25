@@ -21,4 +21,3 @@ COPY . /opt/retail-analytics-lakehouse
 
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["bash"]
-

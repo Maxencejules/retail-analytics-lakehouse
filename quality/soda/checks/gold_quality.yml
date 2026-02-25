@@ -26,4 +26,3 @@ checks for dim_store:
   - row_count > 0
   - missing_count(store_id) = 0
   - duplicate_count(store_id) = 0
-

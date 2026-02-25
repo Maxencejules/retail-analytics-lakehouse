@@ -21,7 +21,9 @@ def ensure_delta_available(spark: SparkSession) -> None:
     extensions = spark.conf.get("spark.sql.extensions", "")
     catalog = spark.conf.get("spark.sql.catalog.spark_catalog", "")
     if "io.delta.sql.DeltaSparkSessionExtension" not in extensions:
-        raise RuntimeError("Delta format requested but spark.sql.extensions is not configured.")
+        raise RuntimeError(
+            "Delta format requested but spark.sql.extensions is not configured."
+        )
     if "org.apache.spark.sql.delta.catalog.DeltaCatalog" not in catalog:
         raise RuntimeError(
             "Delta format requested but spark.sql.catalog.spark_catalog is not configured."
@@ -55,12 +57,7 @@ def write_dataset(
     mode: str = "overwrite",
 ) -> None:
     """Write dataset with partitioning in an idempotent overwrite mode."""
-    (
-        df.write.format(table_format)
-        .mode(mode)
-        .partitionBy(*partition_by)
-        .save(path)
-    )
+    (df.write.format(table_format).mode(mode).partitionBy(*partition_by).save(path))
     LOGGER.info(
         "dataset_written",
         extra={
@@ -77,4 +74,3 @@ def write_dataset(
 def read_dataset(spark: SparkSession, *, path: str, table_format: str) -> DataFrame:
     """Read an existing Bronze/Silver/Gold dataset."""
     return spark.read.format(table_format).load(path)
-

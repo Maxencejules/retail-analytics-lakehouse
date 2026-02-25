@@ -326,4 +326,3 @@ WHERE
     OR warehouse.fact_sales.ingestion_date IS DISTINCT FROM EXCLUDED.ingestion_date;
 
 COMMIT;
-

@@ -86,7 +86,10 @@ class StreamingConfig:
         if self.starting_offsets not in {"earliest", "latest"}:
             raise ValueError("starting_offsets must be 'earliest' or 'latest'")
 
-        if self.max_offsets_per_trigger is not None and self.max_offsets_per_trigger <= 0:
+        if (
+            self.max_offsets_per_trigger is not None
+            and self.max_offsets_per_trigger <= 0
+        ):
             raise ValueError("max_offsets_per_trigger must be > 0 when provided")
 
         if self.output_format not in {"auto", "delta", "parquet"}:
@@ -194,7 +197,9 @@ def read_kafka_stream(spark: SparkSession, config: StreamingConfig) -> DataFrame
     )
 
 
-def parse_and_validate_transactions(raw_stream: DataFrame) -> tuple[DataFrame, DataFrame]:
+def parse_and_validate_transactions(
+    raw_stream: DataFrame,
+) -> tuple[DataFrame, DataFrame]:
     parsed = raw_stream.withColumn(
         "payload",
         F.from_json(
@@ -230,26 +235,26 @@ def parse_and_validate_transactions(raw_stream: DataFrame) -> tuple[DataFrame, D
         & F.col("channel").isin(*ALLOWED_CHANNELS)
     )
 
-    with_flags = (
-        flattened.withColumn("is_valid", is_valid)
-        .withColumn(
-            "error_reason",
-            F.when(F.col("_corrupt_record").isNotNull(), F.lit("malformed_json"))
-            .when(F.col("transaction_id").isNull(), F.lit("missing_transaction_id"))
-            .when(~F.col("transaction_id").rlike(UUID_PATTERN), F.lit("invalid_uuid"))
-            .when(F.col("event_time").isNull(), F.lit("invalid_ts_utc"))
-            .when(F.col("quantity").isNull() | (F.col("quantity") <= 0), F.lit("invalid_quantity"))
-            .when(
-                F.col("unit_price").isNull() | (F.col("unit_price") <= 0.0),
-                F.lit("invalid_unit_price"),
-            )
-            .when(~F.col("channel").isin(*ALLOWED_CHANNELS), F.lit("invalid_channel"))
-            .when(
-                ~F.col("payment_method").isin(*ALLOWED_PAYMENT_METHODS),
-                F.lit("invalid_payment_method"),
-            )
-            .otherwise(F.lit("unknown_validation_error")),
+    with_flags = flattened.withColumn("is_valid", is_valid).withColumn(
+        "error_reason",
+        F.when(F.col("_corrupt_record").isNotNull(), F.lit("malformed_json"))
+        .when(F.col("transaction_id").isNull(), F.lit("missing_transaction_id"))
+        .when(~F.col("transaction_id").rlike(UUID_PATTERN), F.lit("invalid_uuid"))
+        .when(F.col("event_time").isNull(), F.lit("invalid_ts_utc"))
+        .when(
+            F.col("quantity").isNull() | (F.col("quantity") <= 0),
+            F.lit("invalid_quantity"),
         )
+        .when(
+            F.col("unit_price").isNull() | (F.col("unit_price") <= 0.0),
+            F.lit("invalid_unit_price"),
+        )
+        .when(~F.col("channel").isin(*ALLOWED_CHANNELS), F.lit("invalid_channel"))
+        .when(
+            ~F.col("payment_method").isin(*ALLOWED_PAYMENT_METHODS),
+            F.lit("invalid_payment_method"),
+        )
+        .otherwise(F.lit("unknown_validation_error")),
     )
 
     valid = (
@@ -270,7 +275,9 @@ def parse_and_validate_transactions(raw_stream: DataFrame) -> tuple[DataFrame, D
     return valid, malformed
 
 
-def aggregate_store_revenue_5m(valid_transactions: DataFrame, watermark_delay: str) -> DataFrame:
+def aggregate_store_revenue_5m(
+    valid_transactions: DataFrame, watermark_delay: str
+) -> DataFrame:
     return (
         valid_transactions.withWatermark("event_time", watermark_delay)
         .groupBy(F.window(F.col("event_time"), "5 minutes"), F.col("store_id"))
@@ -299,7 +306,9 @@ def aggregate_channel_revenue_1h_sliding(
 ) -> DataFrame:
     return (
         valid_transactions.withWatermark("event_time", watermark_delay)
-        .groupBy(F.window(F.col("event_time"), "1 hour", slide_duration), F.col("channel"))
+        .groupBy(
+            F.window(F.col("event_time"), "1 hour", slide_duration), F.col("channel")
+        )
         .agg(
             F.round(F.sum("revenue"), 2).alias("revenue_total"),
             F.sum("quantity").alias("units_sold"),
@@ -354,7 +363,9 @@ def stop_queries(queries: Iterable[StreamingQuery], timeout_seconds: int = 60) -
         try:
             query.awaitTermination(timeout_seconds)
         except Exception as exc:  # pragma: no cover
-            LOGGER.warning("query_termination_warning name=%s error=%s", query.name, exc)
+            LOGGER.warning(
+                "query_termination_warning name=%s error=%s", query.name, exc
+            )
 
 
 def run(config: StreamingConfig) -> None:
@@ -372,7 +383,9 @@ def run(config: StreamingConfig) -> None:
     )
 
     raw_stream = read_kafka_stream(spark, config)
-    valid_transactions, malformed_transactions = parse_and_validate_transactions(raw_stream)
+    valid_transactions, malformed_transactions = parse_and_validate_transactions(
+        raw_stream
+    )
 
     store_agg = aggregate_store_revenue_5m(valid_transactions, config.watermark_delay)
     channel_agg = aggregate_channel_revenue_1h_sliding(
@@ -422,7 +435,9 @@ def run(config: StreamingConfig) -> None:
 
                 query_exception = query.exception()
                 if query_exception is not None:
-                    raise RuntimeError(f"query '{query.name}' failed: {query_exception}")
+                    raise RuntimeError(
+                        f"query '{query.name}' failed: {query_exception}"
+                    )
 
             time.sleep(5)
     except KeyboardInterrupt:
@@ -439,16 +454,24 @@ def parse_args(argv: Sequence[str] | None = None) -> StreamingConfig:
     )
     parser.add_argument("--kafka-bootstrap-servers", required=True)
     parser.add_argument("--kafka-topic", default="transactions")
-    parser.add_argument("--starting-offsets", default="latest", choices=("earliest", "latest"))
+    parser.add_argument(
+        "--starting-offsets", default="latest", choices=("earliest", "latest")
+    )
     parser.add_argument("--max-offsets-per-trigger", type=int, default=None)
     parser.add_argument("--trigger-interval", default="1 minute")
     parser.add_argument("--watermark-delay", default="30 minutes")
     parser.add_argument("--channel-slide-duration", default="5 minutes")
-    parser.add_argument("--checkpoint-root", default="data/checkpoints/transactions_streaming")
+    parser.add_argument(
+        "--checkpoint-root", default="data/checkpoints/transactions_streaming"
+    )
     parser.add_argument("--gold-root", default="data/gold")
-    parser.add_argument("--output-format", default="auto", choices=("auto", "delta", "parquet"))
+    parser.add_argument(
+        "--output-format", default="auto", choices=("auto", "delta", "parquet")
+    )
     parser.add_argument("--app-name", default="retail-transactions-streaming")
-    parser.add_argument("--log-level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR"))
+    parser.add_argument(
+        "--log-level", default="INFO", choices=("DEBUG", "INFO", "WARNING", "ERROR")
+    )
 
     args = parser.parse_args(argv)
     return StreamingConfig(

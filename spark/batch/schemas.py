@@ -51,7 +51,9 @@ SILVER_SCHEMA = StructType(
 )
 
 
-def validate_required_columns(df: DataFrame, required_columns: Iterable[str], stage: str) -> None:
+def validate_required_columns(
+    df: DataFrame, required_columns: Iterable[str], stage: str
+) -> None:
     """Ensure required columns exist before transformations run."""
     missing = [column for column in required_columns if column not in df.columns]
     if missing:
@@ -60,7 +62,9 @@ def validate_required_columns(df: DataFrame, required_columns: Iterable[str], st
         )
 
 
-def validate_schema_exact(df: DataFrame, expected_schema: StructType, stage: str) -> None:
+def validate_schema_exact(
+    df: DataFrame, expected_schema: StructType, stage: str
+) -> None:
     """Validate column order and data types exactly for deterministic contracts."""
     actual_fields = list(df.schema.fields)
     expected_fields = list(expected_schema.fields)
@@ -71,7 +75,9 @@ def validate_schema_exact(df: DataFrame, expected_schema: StructType, stage: str
             f"expected={len(expected_fields)}"
         )
 
-    for index, (actual, expected) in enumerate(zip(actual_fields, expected_fields), start=1):
+    for index, (actual, expected) in enumerate(
+        zip(actual_fields, expected_fields), start=1
+    ):
         if actual.name != expected.name:
             raise DataQualityError(
                 f"{stage}: schema column mismatch at position {index}: "
@@ -83,4 +89,3 @@ def validate_schema_exact(df: DataFrame, expected_schema: StructType, stage: str
                 f"{stage}: data type mismatch for column {expected.name}: "
                 f"actual={actual.dataType.simpleString()} expected={expected.dataType.simpleString()}"
             )
-

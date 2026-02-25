@@ -89,9 +89,7 @@ def load_gold_daily_revenue(path: str) -> list[SalesDailyRecord]:
         )
 
     if not rows:
-        raise ValueError(
-            f"No usable rows found in Gold dataset at path: {path}"
-        )
+        raise ValueError(f"No usable rows found in Gold dataset at path: {path}")
     return rows
 
 
@@ -137,11 +135,8 @@ def build_lagged_sales_examples(
             event_dates.append(current.event_date)
 
     if not features:
-        raise ValueError(
-            "Insufficient sequential history to build training samples."
-        )
+        raise ValueError("Insufficient sequential history to build training samples.")
 
     feature_matrix = np.asarray(features, dtype=np.float32)
     target_vector = np.asarray(targets, dtype=np.float32)
     return feature_matrix, target_vector, store_ids, event_dates
-

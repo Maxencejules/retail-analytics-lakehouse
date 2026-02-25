@@ -38,7 +38,9 @@ def write_batch_outputs(
     _write_compressed_csv(event_list, csv_path)
     _write_partitioned_parquet(event_list, parquet_path)
 
-    return BatchWriteResult(rows=len(event_list), csv_path=csv_path, parquet_path=parquet_path)
+    return BatchWriteResult(
+        rows=len(event_list), csv_path=csv_path, parquet_path=parquet_path
+    )
 
 
 def _write_compressed_csv(events: list[TransactionEvent], csv_path: Path) -> None:
@@ -49,7 +51,9 @@ def _write_compressed_csv(events: list[TransactionEvent], csv_path: Path) -> Non
             writer.writerow(event.to_serializable_dict())
 
 
-def _write_partitioned_parquet(events: list[TransactionEvent], parquet_path: Path) -> None:
+def _write_partitioned_parquet(
+    events: list[TransactionEvent], parquet_path: Path
+) -> None:
     try:
         import pyarrow as pa
         import pyarrow.dataset as ds
@@ -73,4 +77,3 @@ def _write_partitioned_parquet(events: list[TransactionEvent], parquet_path: Pat
         partitioning=["event_date", "channel"],
         existing_data_behavior="overwrite_or_ignore",
     )
-

@@ -28,16 +28,22 @@ class AwsLakehouseConfig:
         try:
             compaction_target_file_size_mb = int(raw_compaction_size)
         except ValueError as exc:
-            raise ValueError("COMPACTION_TARGET_FILE_SIZE_MB must be an integer") from exc
+            raise ValueError(
+                "COMPACTION_TARGET_FILE_SIZE_MB must be an integer"
+            ) from exc
         if compaction_target_file_size_mb <= 0:
             raise ValueError("COMPACTION_TARGET_FILE_SIZE_MB must be > 0")
 
         return cls(
             environment=os.getenv("APP_ENV", "dev").strip(),
-            region=os.getenv("AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "ca-central-1")).strip(),
+            region=os.getenv(
+                "AWS_REGION", os.getenv("AWS_DEFAULT_REGION", "ca-central-1")
+            ).strip(),
             bucket=bucket,
             prefix=os.getenv("LAKEHOUSE_PREFIX", "").strip().strip("/"),
-            spark_workload_profile=os.getenv("SPARK_WORKLOAD_PROFILE", "balanced").strip(),
+            spark_workload_profile=os.getenv(
+                "SPARK_WORKLOAD_PROFILE", "balanced"
+            ).strip(),
             compaction_target_file_size_mb=compaction_target_file_size_mb,
             profile=os.getenv("AWS_PROFILE", "").strip() or None,
         )

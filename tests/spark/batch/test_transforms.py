@@ -195,4 +195,3 @@ def test_gold_aggregations_produce_expected_metrics(spark: SparkSession) -> None
     assert customer_ltv[0].lifetime_value == pytest.approx(30.0)
     assert customer_ltv[0].transaction_count == 2
     assert customer_ltv[0].snapshot_date == date(2026, 2, 24)
-

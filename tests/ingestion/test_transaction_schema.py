@@ -81,4 +81,3 @@ def test_invalid_payment_method_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="payment_method"):
         validate_transaction_payload(payload)
-

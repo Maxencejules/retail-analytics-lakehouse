@@ -184,5 +184,8 @@ with DAG(
     )
 
     start >> validate_gold_dataset >> train_sales_model >> score_sales_model
-    [validate_gold_dataset, train_sales_model, score_sales_model] >> publish_run_metadata >> finish
-
+    (
+        [validate_gold_dataset, train_sales_model, score_sales_model]
+        >> publish_run_metadata
+        >> finish
+    )

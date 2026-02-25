@@ -42,7 +42,9 @@ def _build_baseline_manifest(
     state_dir: Path,
 ) -> None:
     temp_root.mkdir(parents=True, exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix="dbt-state-", dir=str(temp_root)) as temp_dir:
+    with tempfile.TemporaryDirectory(
+        prefix="dbt-state-", dir=str(temp_root)
+    ) as temp_dir:
         worktree_dir = Path(temp_dir) / "baseline"
         _run(
             ["git", "worktree", "add", "--detach", str(worktree_dir), baseline_ref],
@@ -75,11 +77,16 @@ def _build_baseline_manifest(
                 state_dir.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(baseline_manifest, state_dir / "manifest.json")
         finally:
-            _run(["git", "worktree", "remove", "--force", str(worktree_dir)], cwd=repo_root)
+            _run(
+                ["git", "worktree", "remove", "--force", str(worktree_dir)],
+                cwd=repo_root,
+            )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Resolve dbt slim CI state selections.")
+    parser = argparse.ArgumentParser(
+        description="Resolve dbt slim CI state selections."
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--project-dir", default="warehouse/dbt")
     parser.add_argument("--profiles-dir", default="warehouse/dbt/profiles")

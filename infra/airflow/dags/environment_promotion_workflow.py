@@ -85,7 +85,9 @@ def _validate_promotion_request() -> None:
 
     order = {"dev": 1, "stage": 2, "prod": 3}
     if order[target_env] - order[source_env] != 1:
-        raise AirflowFailException("Promotion must follow environment order dev->stage->prod.")
+        raise AirflowFailException(
+            "Promotion must follow environment order dev->stage->prod."
+        )
 
 
 def _publish_promotion_record() -> None:
@@ -176,7 +178,9 @@ with DAG(
         python_callable=_validate_promotion_request,
     )
 
-    check_dependency_artifact = _build_artifact_sensor(task_id="check_dependency_artifact")
+    check_dependency_artifact = _build_artifact_sensor(
+        task_id="check_dependency_artifact"
+    )
 
     run_dbt_governance_contracts = BashOperator(
         task_id="run_dbt_governance_contracts",
@@ -278,23 +282,47 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
-    start >> validate_promotion_request >> check_dependency_artifact >> run_dbt_governance_contracts
-    run_dbt_governance_contracts >> run_dbt_build_source >> run_dbt_freshness_source >> run_dbt_snapshot_source
-    run_dbt_snapshot_source >> run_dbt_build_target >> run_dbt_freshness_target >> run_dbt_snapshot_target
-    run_dbt_snapshot_target >> run_dbt_docs_generate_target >> run_quality_scan_source >> run_quality_scan_target
+    (
+        start
+        >> validate_promotion_request
+        >> check_dependency_artifact
+        >> run_dbt_governance_contracts
+    )
+    (
+        run_dbt_governance_contracts
+        >> run_dbt_build_source
+        >> run_dbt_freshness_source
+        >> run_dbt_snapshot_source
+    )
+    (
+        run_dbt_snapshot_source
+        >> run_dbt_build_target
+        >> run_dbt_freshness_target
+        >> run_dbt_snapshot_target
+    )
+    (
+        run_dbt_snapshot_target
+        >> run_dbt_docs_generate_target
+        >> run_quality_scan_source
+        >> run_quality_scan_target
+    )
     run_quality_scan_target >> publish_promotion_record
-    [
-        validate_promotion_request,
-        check_dependency_artifact,
-        run_dbt_governance_contracts,
-        run_dbt_build_source,
-        run_dbt_freshness_source,
-        run_dbt_snapshot_source,
-        run_dbt_build_target,
-        run_dbt_freshness_target,
-        run_dbt_snapshot_target,
-        run_dbt_docs_generate_target,
-        run_quality_scan_source,
-        run_quality_scan_target,
-        publish_promotion_record,
-    ] >> publish_run_metadata >> finish
+    (
+        [
+            validate_promotion_request,
+            check_dependency_artifact,
+            run_dbt_governance_contracts,
+            run_dbt_build_source,
+            run_dbt_freshness_source,
+            run_dbt_snapshot_source,
+            run_dbt_build_target,
+            run_dbt_freshness_target,
+            run_dbt_snapshot_target,
+            run_dbt_docs_generate_target,
+            run_quality_scan_source,
+            run_quality_scan_target,
+            publish_promotion_record,
+        ]
+        >> publish_run_metadata
+        >> finish
+    )

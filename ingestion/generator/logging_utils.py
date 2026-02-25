@@ -40,4 +40,3 @@ def configure_logging(level: str = "INFO") -> logging.Logger:
             handler.setFormatter(JsonFormatter())
 
     return logging.getLogger("ingestion.generator")
-

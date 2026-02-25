@@ -1,2 +1,1 @@
 """Executive dashboard package."""
-

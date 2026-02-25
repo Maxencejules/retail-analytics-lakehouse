@@ -32,4 +32,3 @@ select
     country_code,
     current_timestamp as updated_at
 from source_data
-

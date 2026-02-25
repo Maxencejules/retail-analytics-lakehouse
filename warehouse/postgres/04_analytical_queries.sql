@@ -93,4 +93,3 @@ SELECT
 FROM scored s
 GROUP BY segment_bucket
 ORDER BY avg_ltv DESC;
-

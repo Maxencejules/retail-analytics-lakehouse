@@ -4,4 +4,3 @@ alert_routing:
   channels:
     - slack:data-quality-alerts
     - pagerduty:data-platform-oncall
-

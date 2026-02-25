@@ -23,4 +23,3 @@ select
     source_updated_at
 from ranked
 where row_num = 1 and customer_id is not null and customer_id <> ''
-

@@ -185,4 +185,3 @@ def validate_transaction_payload(payload: Mapping[str, Any]) -> TransactionEvent
         channel=str(payload["channel"]),
         promo_id=promo_id,
     )
-

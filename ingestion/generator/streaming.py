@@ -70,7 +70,9 @@ def stream_transactions(
     if log_every <= 0:
         raise ValueError("log_every must be > 0")
 
-    server_list = [server.strip() for server in bootstrap_servers.split(",") if server.strip()]
+    server_list = [
+        server.strip() for server in bootstrap_servers.split(",") if server.strip()
+    ]
     if not server_list:
         raise ValueError("bootstrap_servers must include at least one host:port entry")
 
@@ -136,4 +138,3 @@ def stream_transactions(
             "stream_stopped",
             extra={"context": {"published": published, "topic": topic}},
         )
-

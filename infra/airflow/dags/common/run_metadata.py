@@ -67,7 +67,9 @@ def derive_overall_status(task_states: list[dict[str, Any]]) -> str:
         return "failed"
     if states and states.issubset(TERMINAL_SUCCESS_STATES):
         return "success"
-    if states and states.issubset(TERMINAL_SUCCESS_STATES | TERMINAL_NON_SUCCESS_STATES):
+    if states and states.issubset(
+        TERMINAL_SUCCESS_STATES | TERMINAL_NON_SUCCESS_STATES
+    ):
         return "partial_success"
     return "unknown"
 
@@ -107,7 +109,9 @@ def write_json_record(record: dict[str, Any], output_path: str) -> None:
         bucket = parsed.netloc
         key = parsed.path.lstrip("/")
         if not bucket or not key:
-            raise AirflowFailException(f"Invalid S3 metadata output path: {output_path}")
+            raise AirflowFailException(
+                f"Invalid S3 metadata output path: {output_path}"
+            )
 
         try:
             import boto3
@@ -127,4 +131,6 @@ def write_json_record(record: dict[str, Any], output_path: str) -> None:
 
     destination = Path(output_path)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    destination.write_text(json.dumps(record, indent=2, sort_keys=True), encoding="utf-8")
+    destination.write_text(
+        json.dumps(record, indent=2, sort_keys=True), encoding="utf-8"
+    )

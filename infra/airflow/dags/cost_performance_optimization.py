@@ -152,4 +152,8 @@ with DAG(
     )
 
     start >> validate_phase3_policies >> run_lakehouse_compaction
-    [validate_phase3_policies, run_lakehouse_compaction] >> publish_run_metadata >> finish
+    (
+        [validate_phase3_policies, run_lakehouse_compaction]
+        >> publish_run_metadata
+        >> finish
+    )

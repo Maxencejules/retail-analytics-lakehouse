@@ -33,4 +33,3 @@ select
         else 'Emerging'
     end as segment_bucket
 from scored
-

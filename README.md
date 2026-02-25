@@ -41,11 +41,17 @@ Core capabilities:
 
 ## Demo Preview
 
-Quick visual walkthrough:
+Quick visual walkthrough from a real local run:
 
-![Quickstart Terminal Demo](docs-site/assets/screenshots/quickstart-terminal.svg)
+![Quickstart Terminal Demo](docs-site/assets/screenshots/quickstart-terminal.png)
 
-![Dashboard Demo](docs-site/assets/screenshots/quickstart-dashboard.svg)
+![Dashboard Demo](docs-site/assets/screenshots/quickstart-dashboard.png)
+
+Regenerate these captures:
+
+```bash
+python scripts/generate_readme_demos.py
+```
 
 More walkthrough content:
 - [Quickstart guide](docs-site/quickstart.md)

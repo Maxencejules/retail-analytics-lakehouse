@@ -31,7 +31,7 @@ This repository is designed for teams that need:
 
 Core capabilities:
 
-- Synthetic batch and streaming transaction generation.
+- Synthetic transaction generation, UCI real-data normalization, and streaming utilities.
 - PySpark batch ETL and structured streaming pipelines.
 - Warehouse modeling via Postgres SQL + dbt semantic/governance layer.
 - Airflow DAGs for daily execution, backfills, and environment promotion.
@@ -80,7 +80,7 @@ Detailed architecture references:
 
 | Path | Responsibility |
 |---|---|
-| `ingestion/` | Synthetic transaction generation and streaming utilities. |
+| `ingestion/` | Synthetic + real-source normalization and streaming ingestion utilities. |
 | `spark/batch/` | Batch ETL from raw input to Bronze/Silver/Gold outputs. |
 | `spark/streaming/` | Kafka-based Structured Streaming transformations to Gold outputs. |
 | `spark/optimization/` | Compaction and optimization workflows for Silver/Gold datasets. |
@@ -133,7 +133,7 @@ make airflow-dag-validate
 
 ## Local End-to-End Workflow
 
-### 1. Generate Synthetic Source Data
+### 1A. Generate Synthetic Source Data (Default)
 
 ```bash
 python ingestion/generator/generate.py \
@@ -143,7 +143,22 @@ python ingestion/generator/generate.py \
   --output-dir data/generated
 ```
 
-### 2. Run Batch ETL
+### 1B. Normalize UCI Online Retail II Data (Real Data Option)
+
+Convert a CSV export of UCI Online Retail II into canonical transaction records:
+
+```bash
+python ingestion/real/uci_online_retail.py \
+  --input-path data/raw/online_retail_ii.csv \
+  --output-path data/generated/transactions.csv.gz \
+  --currency USD \
+  --payment-method credit_card \
+  --channel online
+```
+
+Expected source columns include `Invoice`/`InvoiceNo`, `StockCode`, `Quantity`, `InvoiceDate`, `Price`/`UnitPrice`, `Customer ID`/`CustomerID`, and `Country`.
+
+### 2. Run Batch ETL (Synthetic or Real Input)
 
 ```bash
 python spark/batch/run_pipeline.py \
@@ -169,7 +184,7 @@ make test-integration
 
 This verifies:
 
-- successful generator-to-Gold pipeline execution
+- successful source-to-Gold pipeline execution
 - fail-fast behavior on invalid critical records
 
 ### 4. Run the Dashboard (Optional)

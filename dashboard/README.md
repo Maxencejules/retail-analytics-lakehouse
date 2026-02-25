@@ -4,13 +4,21 @@ Streamlit dashboard for executive stakeholders with:
 
 - Total Revenue
 - Average Order Value
+- Total Orders
 - Top 5 Stores
 - Top 5 Products
 - Revenue Trend Over Time
 
 Includes:
-- Date range filter
-- Store filter
+- Batched filter form (apply/reset)
+- Date range presets (7/30/90 days, quarter-to-date, custom)
+- Previous-period KPI deltas (when enough history exists)
+- Operational highlight panel with top contributors and peak-day callouts
+- Revenue trend with daily line plus 7-day smoothing
+- Chart-first overview plus detailed tables with CSV export
+- Date range and store filters
+- Visible keyboard focus states for interactive controls
+- Reduced-motion support via `prefers-reduced-motion`
 - Data access abstraction for warehouse and Gold backends
 
 ## Data Sources
@@ -61,4 +69,3 @@ streamlit run dashboard/app.py
 
 Detailed KPI definitions are documented in:
 - [dashboard/docs/kpi-definitions.md](C:/Users/USER/retail-analytics-lakehouse/dashboard/docs/kpi-definitions.md)
-

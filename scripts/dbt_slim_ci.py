@@ -189,15 +189,23 @@ def main(argv: list[str] | None = None) -> int:
         if not manifest_path.exists() and not args.skip_baseline_build:
             resolved_baseline_ref = _resolve_baseline_ref(repo_root, args.baseline_ref)
             if resolved_baseline_ref:
-                _build_baseline_manifest(
-                    repo_root=repo_root,
-                    temp_root=temp_root,
-                    baseline_ref=resolved_baseline_ref,
-                    project_dir=project_dir,
-                    profiles_file=temp_profiles / "profiles.yml",
-                    dbt_bin=args.dbt_bin,
-                    state_dir=state_dir,
-                )
+                try:
+                    _build_baseline_manifest(
+                        repo_root=repo_root,
+                        temp_root=temp_root,
+                        baseline_ref=resolved_baseline_ref,
+                        project_dir=project_dir,
+                        profiles_file=temp_profiles / "profiles.yml",
+                        dbt_bin=args.dbt_bin,
+                        state_dir=state_dir,
+                    )
+                except subprocess.CalledProcessError as exc:
+                    print(
+                        "Unable to build baseline dbt manifest; "
+                        "falling back to selector mode."
+                    )
+                    if exc.stderr:
+                        print(exc.stderr.strip())
             else:
                 print(
                     "Unable to resolve a baseline git ref for dbt slim CI; "

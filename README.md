@@ -5,6 +5,7 @@ Production-grade monorepo for a modular retail analytics lakehouse spanning inge
 ## Table of Contents
 
 - [Overview](#overview)
+- [Demo Preview](#demo-preview)
 - [Architecture](#architecture)
 - [Repository Structure](#repository-structure)
 - [Getting Started](#getting-started)
@@ -37,6 +38,18 @@ Core capabilities:
 - Soda quality scans, Prometheus/Grafana monitoring, and OpenLineage metadata support.
 - Executive dashboard consuming either warehouse or Gold datasets.
 - Trino federation across warehouse tables, lakehouse parquet outputs, and external object-store snapshots.
+
+## Demo Preview
+
+Quick visual walkthrough:
+
+![Quickstart Terminal Demo](docs-site/assets/screenshots/quickstart-terminal.svg)
+
+![Dashboard Demo](docs-site/assets/screenshots/quickstart-dashboard.svg)
+
+More walkthrough content:
+- [Quickstart guide](docs-site/quickstart.md)
+- [Live demo placeholder](docs-site/live-demo.md)
 
 ## Architecture
 

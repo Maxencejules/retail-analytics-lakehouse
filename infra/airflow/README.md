@@ -74,6 +74,23 @@ Validate DAG syntax:
 make airflow-dag-validate
 ```
 
+## Chaos Drill Hooks
+
+Use local chaos experiments to validate Airflow resilience under network partitions:
+
+```bash
+make chaos-airflow-partition CHAOS_DURATION_SECONDS=60 CHAOS_TARGET_CONTAINER=airflow-webserver
+```
+
+Expected outcomes:
+
+- running DAG tasks fail or retry according to DAG retry policy,
+- alert callbacks emit webhook/SNS notifications,
+- recovery completes within the ETL recovery SLO window (30 minutes).
+
+Reference:
+- [docs/chaos-engineering.md](C:/Users/USER/retail-analytics-lakehouse/docs/chaos-engineering.md)
+
 ## Notes
 
 - These DAGs are intentionally environment-driven; credentials are not hardcoded.

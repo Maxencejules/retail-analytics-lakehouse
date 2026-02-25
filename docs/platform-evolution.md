@@ -45,6 +45,18 @@ Exit criteria:
 - Compute scales to demand with bounded SLA and spend variance.
 - Workload policies prevent noisy-neighbor impact and runaway query cost.
 
+### Phase 4: Chaos Engineering and SLA Validation
+
+Scope:
+- Controlled failure injection for orchestration and compute tiers.
+- Gremlin-compatible experiment templates for network and crash scenarios.
+- Explicit SLA verification for ETL availability and recovery windows.
+
+Exit criteria:
+- Quarterly chaos drills are executed and logged.
+- ETL 99.9% availability SLA posture is measured and reported.
+- Recovery workflows are validated under partition/crash scenarios.
+
 ## 1. Airflow Orchestration
 
 Artifacts:

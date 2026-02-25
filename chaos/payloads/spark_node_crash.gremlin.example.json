@@ -1,0 +1,11 @@
+{
+  "title": "spark-node-crash",
+  "description": "Example payload template for terminating a Spark worker/driver node.",
+  "duration_seconds": "{{duration_seconds}}",
+  "target": {
+    "container": "{{target_container}}",
+    "compose_project": "{{compose_project}}"
+  },
+  "recommended_attack": "process_kill_or_node_shutdown",
+  "notes": "Replace this schema with your Gremlin API contract. This file is a placeholder template only."
+}

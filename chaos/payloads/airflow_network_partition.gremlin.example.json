@@ -1,0 +1,12 @@
+{
+  "title": "airflow-network-partition",
+  "description": "Example payload template for a network partition against an Airflow component.",
+  "duration_seconds": "{{duration_seconds}}",
+  "target": {
+    "container": "{{target_container}}",
+    "network": "{{docker_network}}",
+    "compose_project": "{{compose_project}}"
+  },
+  "recommended_attack": "network_partition",
+  "notes": "Replace this schema with your Gremlin API contract. This file is a placeholder template only."
+}

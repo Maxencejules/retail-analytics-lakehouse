@@ -2,7 +2,7 @@
 
 PYTHON ?= python
 VENV ?= .venv
-PROJECT_DIRS := ingestion spark warehouse dashboard infra tests scripts
+PROJECT_DIRS := ingestion spark warehouse dashboard infra tests scripts chaos
 DBT ?= dbt
 DOCKER_COMPOSE ?= docker compose
 SODA_CONFIG ?= quality/soda/configuration.yml
@@ -15,6 +15,16 @@ BENCHMARK_ROWS ?= 5000
 BENCHMARK_ITERATIONS ?= 3
 BENCHMARK_WARMUP_ITERATIONS ?= 1
 BENCHMARK_OUTPUT ?= perf/results/latest/etl-benchmark.json
+CHAOS_EXPERIMENT ?= airflow_network_partition
+CHAOS_MODE ?= local-docker
+CHAOS_DURATION_SECONDS ?= 60
+CHAOS_TARGET_CONTAINER ?=
+CHAOS_DOCKER_NETWORK ?= retail-analytics-lakehouse_default
+CHAOS_COMPOSE_PROJECT ?= retail-analytics-lakehouse
+CHAOS_GREMLIN_ENDPOINT ?=
+CHAOS_PAYLOAD_FILE ?=
+CHAOS_OUTPUT_FILE ?=
+CHAOS_DRY_RUN ?= false
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN := $(VENV)/Scripts
@@ -29,7 +39,7 @@ PY := $(VENV_BIN)/python
 	airflow-dag-validate dbt-build dbt-docs soda-scan monitoring-up monitoring-down \
 	dbt-source-freshness dbt-phase2-gate dbt-governance-validate \
 	compact-lakehouse phase3-policy-validate phase3-gate platform-check \
-	dbt-slim-ci benchmark-etl
+	dbt-slim-ci benchmark-etl chaos-run chaos-airflow-partition chaos-spark-crash
 
 init:
 >$(PYTHON) -m venv $(VENV)
@@ -59,6 +69,25 @@ benchmark-etl:
 >	--iterations $(BENCHMARK_ITERATIONS) \
 >	--warmup-iterations $(BENCHMARK_WARMUP_ITERATIONS) \
 >	--output $(BENCHMARK_OUTPUT)
+
+chaos-run:
+>$(PY) chaos/run_experiment.py \
+>	--experiment $(CHAOS_EXPERIMENT) \
+>	--mode $(CHAOS_MODE) \
+>	--duration-seconds $(CHAOS_DURATION_SECONDS) \
+>	--docker-network $(CHAOS_DOCKER_NETWORK) \
+>	--compose-project $(CHAOS_COMPOSE_PROJECT) \
+>	$(if $(CHAOS_TARGET_CONTAINER),--target-container $(CHAOS_TARGET_CONTAINER),) \
+>	$(if $(CHAOS_GREMLIN_ENDPOINT),--gremlin-endpoint $(CHAOS_GREMLIN_ENDPOINT),) \
+>	$(if $(CHAOS_PAYLOAD_FILE),--payload-file $(CHAOS_PAYLOAD_FILE),) \
+>	$(if $(CHAOS_OUTPUT_FILE),--output-file $(CHAOS_OUTPUT_FILE),) \
+>	$(if $(filter true,$(CHAOS_DRY_RUN)),--dry-run,)
+
+chaos-airflow-partition:
+>$(MAKE) chaos-run CHAOS_EXPERIMENT=airflow_network_partition
+
+chaos-spark-crash:
+>$(MAKE) chaos-run CHAOS_EXPERIMENT=spark_node_crash
 
 precommit:
 >$(PY) -m pre_commit run --all-files

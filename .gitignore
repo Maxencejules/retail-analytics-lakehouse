@@ -33,6 +33,7 @@ Thumbs.db
 data/
 artifacts/
 .tmp/
+chaos/results/*.json
 
 # Airflow and dbt artifacts
 logs/

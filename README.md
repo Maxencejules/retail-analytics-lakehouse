@@ -12,6 +12,7 @@ Production-grade monorepo for a modular retail analytics lakehouse spanning inge
 - [Operational Runbook](#operational-runbook)
 - [Configuration](#configuration)
 - [Performance Benchmarking](#performance-benchmarking)
+- [Chaos Engineering and SLA](#chaos-engineering-and-sla)
 - [Federated Queries with Trino](#federated-queries-with-trino)
 - [GitHub Pages Docs Site](#github-pages-docs-site)
 - [Quality Standards and CI](#quality-standards-and-ci)
@@ -74,6 +75,7 @@ Detailed architecture references:
 | `scripts/` | CI and validation scripts (integration, governance, policy, quality). |
 | `tests/` | Unit tests for ingestion and Spark transformation logic. |
 | `perf/` | Benchmark scripts documentation and generated performance reports. |
+| `chaos/` | Chaos experiment scripts, Gremlin payload templates, and drill artifacts. |
 | `docs-site/` | Jekyll-based GitHub Pages site for interactive documentation. |
 | `docs/` | Architecture, cloud setup, CI/CD, and operational guidance. |
 
@@ -214,6 +216,12 @@ make monitoring-down
 
 Reference: [infra/monitoring/README.md](infra/monitoring/README.md)
 
+### SLA Targets
+
+- ETL availability SLA: **99.9% monthly uptime** for scheduled batch ETL jobs.
+- ETL recovery SLO: recover from orchestrator/compute failures within **30 minutes**.
+- Freshness SLO: `fact_sales` lag <= **30 minutes**.
+
 ### Federated Queries with Trino
 
 ```bash
@@ -232,6 +240,17 @@ make compact-lakehouse
 ```
 
 Reference: [spark/optimization/README.md](spark/optimization/README.md)
+
+### Chaos Engineering Drills
+
+```bash
+make chaos-airflow-partition CHAOS_DURATION_SECONDS=60 CHAOS_TARGET_CONTAINER=airflow-webserver
+make chaos-spark-crash CHAOS_DURATION_SECONDS=60
+```
+
+Chaos runbook and Gremlin integration:
+- [docs/chaos-engineering.md](docs/chaos-engineering.md)
+- [chaos/README.md](chaos/README.md)
 
 ## Configuration
 
@@ -295,6 +314,29 @@ Benchmark outputs:
 Benchmark details and advanced options:
 - [perf/README.md](perf/README.md)
 
+## Chaos Engineering and SLA
+
+Chaos experiment commands:
+
+```bash
+make chaos-run CHAOS_EXPERIMENT=airflow_network_partition CHAOS_DRY_RUN=true
+make chaos-run CHAOS_EXPERIMENT=spark_node_crash CHAOS_DURATION_SECONDS=45
+```
+
+Gremlin-mode example:
+
+```bash
+make chaos-run \
+  CHAOS_EXPERIMENT=airflow_network_partition \
+  CHAOS_MODE=gremlin-http \
+  CHAOS_GREMLIN_ENDPOINT=$GREMLIN_API_ENDPOINT \
+  CHAOS_PAYLOAD_FILE=chaos/payloads/airflow_network_partition.gremlin.example.json
+```
+
+Reference:
+- [docs/chaos-engineering.md](docs/chaos-engineering.md)
+- [infra/monitoring/SLOS.md](infra/monitoring/SLOS.md)
+
 ## GitHub Pages Docs Site
 
 Docs site source:
@@ -355,6 +397,7 @@ Additional recommended practices:
 - Platform evolution roadmap: [docs/platform-evolution.md](docs/platform-evolution.md)
 - Cost/performance automation: [docs/cost-performance.md](docs/cost-performance.md)
 - Performance benchmarking: [perf/README.md](perf/README.md)
+- Chaos engineering runbook: [docs/chaos-engineering.md](docs/chaos-engineering.md)
 - Interactive GitHub Pages docs: [docs-site/README.md](docs-site/README.md)
 - AWS setup: [docs/aws-setup.md](docs/aws-setup.md)
 - Federated querying with Trino: [docs/federated-querying.md](docs/federated-querying.md)

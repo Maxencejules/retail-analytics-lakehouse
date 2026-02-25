@@ -8,6 +8,15 @@ from pathlib import Path
 
 import pytest
 from pyspark.sql import SparkSession
+from pyspark.sql.types import (
+    DateType,
+    DoubleType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+    TimestampType,
+)
 
 from spark.batch.exceptions import DataQualityError
 from spark.batch.transforms import (
@@ -16,6 +25,50 @@ from spark.batch.transforms import (
     build_gold_top_10_products_by_day,
     transform_bronze_to_silver,
 )
+
+BRONZE_TEST_SCHEMA = StructType(
+    [
+        StructField("transaction_id", StringType(), nullable=True),
+        StructField("ts_utc", StringType(), nullable=True),
+        StructField("store_id", StringType(), nullable=True),
+        StructField("customer_id", StringType(), nullable=True),
+        StructField("product_id", StringType(), nullable=True),
+        StructField("quantity", StringType(), nullable=True),
+        StructField("unit_price", StringType(), nullable=True),
+        StructField("currency", StringType(), nullable=True),
+        StructField("payment_method", StringType(), nullable=True),
+        StructField("channel", StringType(), nullable=True),
+        StructField("promo_id", StringType(), nullable=True),
+        StructField("ingestion_date", StringType(), nullable=True),
+    ]
+)
+
+SILVER_TEST_SCHEMA = StructType(
+    [
+        StructField("transaction_id", StringType(), nullable=False),
+        StructField("ts_utc", TimestampType(), nullable=False),
+        StructField("store_id", StringType(), nullable=False),
+        StructField("customer_id", StringType(), nullable=False),
+        StructField("product_id", StringType(), nullable=False),
+        StructField("quantity", IntegerType(), nullable=False),
+        StructField("unit_price", DoubleType(), nullable=False),
+        StructField("currency", StringType(), nullable=False),
+        StructField("payment_method", StringType(), nullable=False),
+        StructField("channel", StringType(), nullable=False),
+        StructField("promo_id", StringType(), nullable=True),
+        StructField("revenue", DoubleType(), nullable=False),
+        StructField("event_date", DateType(), nullable=False),
+        StructField("ingestion_date", DateType(), nullable=False),
+    ]
+)
+
+
+def _create_bronze_df(spark: SparkSession, rows: list[dict[str, object]]):
+    return spark.createDataFrame(rows, schema=BRONZE_TEST_SCHEMA)
+
+
+def _create_silver_df(spark: SparkSession, rows: list[dict[str, object]]):
+    return spark.createDataFrame(rows, schema=SILVER_TEST_SCHEMA)
 
 
 @pytest.fixture(scope="session")
@@ -40,7 +93,8 @@ def spark() -> SparkSession:
 
 
 def test_silver_casts_normalizes_and_handles_null_promo(spark: SparkSession) -> None:
-    bronze_df = spark.createDataFrame(
+    bronze_df = _create_bronze_df(
+        spark,
         [
             {
                 "transaction_id": "tx-1",
@@ -56,7 +110,7 @@ def test_silver_casts_normalizes_and_handles_null_promo(spark: SparkSession) -> 
                 "promo_id": "",
                 "ingestion_date": "2026-02-24",
             }
-        ]
+        ],
     )
 
     silver_df = transform_bronze_to_silver(bronze_df, fail_fast_quality=True)
@@ -73,7 +127,8 @@ def test_silver_casts_normalizes_and_handles_null_promo(spark: SparkSession) -> 
 
 
 def test_silver_deduplicates_by_latest_timestamp(spark: SparkSession) -> None:
-    bronze_df = spark.createDataFrame(
+    bronze_df = _create_bronze_df(
+        spark,
         [
             {
                 "transaction_id": "tx-dup",
@@ -103,7 +158,7 @@ def test_silver_deduplicates_by_latest_timestamp(spark: SparkSession) -> None:
                 "promo_id": None,
                 "ingestion_date": "2026-02-24",
             },
-        ]
+        ],
     )
 
     silver_df = transform_bronze_to_silver(bronze_df, fail_fast_quality=True)
@@ -115,7 +170,8 @@ def test_silver_deduplicates_by_latest_timestamp(spark: SparkSession) -> None:
 
 
 def test_silver_fail_fast_on_critical_quality_violations(spark: SparkSession) -> None:
-    bronze_df = spark.createDataFrame(
+    bronze_df = _create_bronze_df(
+        spark,
         [
             {
                 "transaction_id": "tx-bad",
@@ -131,7 +187,7 @@ def test_silver_fail_fast_on_critical_quality_violations(spark: SparkSession) ->
                 "promo_id": None,
                 "ingestion_date": "2026-02-24",
             }
-        ]
+        ],
     )
 
     with pytest.raises(DataQualityError, match="critical data quality violations"):
@@ -139,7 +195,8 @@ def test_silver_fail_fast_on_critical_quality_violations(spark: SparkSession) ->
 
 
 def test_gold_aggregations_produce_expected_metrics(spark: SparkSession) -> None:
-    silver_df = spark.createDataFrame(
+    silver_df = _create_silver_df(
+        spark,
         [
             {
                 "transaction_id": "t1",
@@ -173,7 +230,7 @@ def test_gold_aggregations_produce_expected_metrics(spark: SparkSession) -> None
                 "event_date": date(2026, 2, 24),
                 "ingestion_date": date(2026, 2, 24),
             },
-        ]
+        ],
     )
 
     daily_store = build_gold_daily_revenue_by_store(silver_df).collect()

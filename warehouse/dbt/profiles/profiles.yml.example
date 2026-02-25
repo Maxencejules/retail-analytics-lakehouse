@@ -17,7 +17,7 @@ retail_analytics_warehouse:
       host: stage-db.internal
       port: 5432
       user: dbt_stage
-      pass: "{{ env_var('DBT_STAGE_PASSWORD') }}"
+      pass: "{{ env_var('DBT_STAGE_PASSWORD', 'stage-placeholder') }}"
       dbname: retail_analytics_stage
       schema: warehouse
       threads: 8
@@ -28,7 +28,7 @@ retail_analytics_warehouse:
       host: prod-db.internal
       port: 5432
       user: dbt_prod
-      pass: "{{ env_var('DBT_PROD_PASSWORD') }}"
+      pass: "{{ env_var('DBT_PROD_PASSWORD', 'prod-placeholder') }}"
       dbname: retail_analytics_prod
       schema: warehouse
       threads: 12

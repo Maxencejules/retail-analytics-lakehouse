@@ -186,55 +186,109 @@ def _capture_terminal_image(lines: list[str], output_path: Path) -> None:
     <style>
       body {{
         margin: 0;
-        background: #0f172a;
+        background: #111111;
         font-family: "Cascadia Code", "Consolas", monospace;
       }}
       .window {{
         width: 1280px;
         height: 720px;
-        border-radius: 16px;
+        border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 20px 60px rgba(2, 6, 23, 0.5);
+        border: 1px solid #2a2a2a;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
       }}
       .bar {{
-        height: 52px;
-        background: #1e293b;
+        height: 44px;
+        background: #1f1f1f;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid #2a2a2a;
+      }}
+      .bar-left {{
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 0 18px;
+        padding-left: 10px;
       }}
-      .dot {{
-        width: 12px;
-        height: 12px;
-        border-radius: 50%;
+      .tab {{
+        height: 30px;
+        min-width: 300px;
+        background: #2b2b2b;
+        border: 1px solid #3a3a3a;
+        border-bottom-color: #2b2b2b;
+        border-radius: 6px 6px 0 0;
+        color: #f3f3f3;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        font-size: 13px;
       }}
-      .dot.red {{ background: #f43f5e; }}
-      .dot.yellow {{ background: #f59e0b; }}
-      .dot.green {{ background: #22c55e; }}
-      .title {{
-        color: #cbd5e1;
-        margin-left: 12px;
+      .tab-icon {{
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        background: #3b82f6;
+        margin-right: 8px;
+      }}
+      .tab-close {{
+        margin-left: auto;
+        color: #a3a3a3;
+      }}
+      .tab-add {{
+        color: #d4d4d4;
+        font-size: 18px;
+        line-height: 1;
+        margin-left: 2px;
+      }}
+      .controls {{
+        display: flex;
+        align-items: stretch;
+      }}
+      .control {{
+        width: 46px;
+        height: 44px;
+        color: #d4d4d4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 14px;
+      }}
+      .control.close {{
+        background: #c42b1c;
+        color: #ffffff;
       }}
       pre {{
         margin: 0;
-        padding: 20px;
-        color: #e2e8f0;
+        padding: 18px 20px;
+        color: #f5f5f5;
         font-size: 16px;
-        line-height: 1.45;
+        line-height: 1.4;
         white-space: pre-wrap;
         word-break: break-word;
+        background: #0c0c0c;
+        height: calc(720px - 44px);
+        box-sizing: border-box;
       }}
     </style>
   </head>
   <body>
     <div class="window">
       <div class="bar">
-        <span class="dot red"></span>
-        <span class="dot yellow"></span>
-        <span class="dot green"></span>
-        <span class="title">retail-analytics-lakehouse real quickstart capture</span>
+        <div class="bar-left">
+          <div class="tab">
+            <span class="tab-icon"></span>
+            Windows PowerShell
+            <span class="tab-close">x</span>
+          </div>
+          <span class="tab-add">+</span>
+        </div>
+        <div class="controls">
+          <span class="control">-</span>
+          <span class="control">[]</span>
+          <span class="control close">x</span>
+        </div>
       </div>
       <pre>{html.escape(transcript)}</pre>
     </div>

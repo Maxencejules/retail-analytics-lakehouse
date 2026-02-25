@@ -309,7 +309,16 @@ def _capture_dashboard_image(url: str, output_path: Path) -> None:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 980})
         page.goto(url, wait_until="networkidle", timeout=120000)
-        page.get_by_text("Retail Loyalty Executive Dashboard").first.wait_for(timeout=120000)
+        page.wait_for_function(
+            """() => {
+                const text = document.body ? document.body.innerText : "";
+                return (
+                    text.includes("Retail Performance Cockpit") ||
+                    text.includes("Retail Loyalty Executive Dashboard")
+                );
+            }""",
+            timeout=120000,
+        )
         page.wait_for_timeout(2500)
         page.screenshot(path=str(output_path), full_page=True)
         browser.close()

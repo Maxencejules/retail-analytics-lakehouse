@@ -93,6 +93,29 @@ def _resolve_profiles_source(profiles_dir: Path) -> Path:
     raise FileNotFoundError(f"Missing dbt profiles template: {example}")
 
 
+def _filesystem_fallback_selection(project_dir: Path) -> list[str]:
+    fallback_dirs = [
+        project_dir / "models" / "marts",
+        project_dir / "models" / "metrics",
+    ]
+    names: set[str] = set()
+    for model_dir in fallback_dirs:
+        if not model_dir.exists():
+            continue
+        names.update(path.stem for path in model_dir.rglob("*.sql"))
+
+    if names:
+        return sorted(names)
+
+    all_model_names = sorted(
+        {path.stem for path in (project_dir / "models").rglob("*.sql")}
+    )
+    if all_model_names:
+        return all_model_names
+
+    return ["*"]
+
+
 def _build_baseline_manifest(
     *,
     repo_root: Path,
@@ -212,57 +235,83 @@ def main(argv: list[str] | None = None) -> int:
                     "falling back to selector mode."
                 )
 
-        _run(
-            [
-                args.dbt_bin,
-                "parse",
-                "--project-dir",
-                str(project_dir),
-                "--profiles-dir",
-                str(temp_profiles.resolve()),
-                "--target",
-                args.target,
-            ],
-            cwd=repo_root,
-        )
-
-        if manifest_path.exists():
-            selection_output = _run(
+        current_parse_ok = True
+        try:
+            _run(
                 [
                     args.dbt_bin,
-                    "ls",
+                    "parse",
                     "--project-dir",
                     str(project_dir),
                     "--profiles-dir",
                     str(temp_profiles.resolve()),
                     "--target",
                     args.target,
-                    "--state",
-                    str(state_dir),
-                    "--select",
-                    "state:modified+",
-                    "--output",
-                    "name",
                 ],
                 cwd=repo_root,
             )
+        except subprocess.CalledProcessError as exc:
+            current_parse_ok = False
+            print(
+                "Unable to parse current dbt project; "
+                "using filesystem fallback selection."
+            )
+            if exc.stderr:
+                print(exc.stderr.strip())
+
+        if current_parse_ok:
+            try:
+                if manifest_path.exists():
+                    selection_output = _run(
+                        [
+                            args.dbt_bin,
+                            "ls",
+                            "--project-dir",
+                            str(project_dir),
+                            "--profiles-dir",
+                            str(temp_profiles.resolve()),
+                            "--target",
+                            args.target,
+                            "--state",
+                            str(state_dir),
+                            "--select",
+                            "state:modified+",
+                            "--output",
+                            "name",
+                        ],
+                        cwd=repo_root,
+                    )
+                else:
+                    selection_output = _run(
+                        [
+                            args.dbt_bin,
+                            "ls",
+                            "--project-dir",
+                            str(project_dir),
+                            "--profiles-dir",
+                            str(temp_profiles.resolve()),
+                            "--target",
+                            args.target,
+                            "--selector",
+                            args.fallback_selector,
+                            "--output",
+                            "name",
+                        ],
+                        cwd=repo_root,
+                    )
+            except subprocess.CalledProcessError as exc:
+                print(
+                    "Unable to resolve dbt selection via dbt ls; "
+                    "using filesystem fallback selection."
+                )
+                if exc.stderr:
+                    print(exc.stderr.strip())
+                selection_output = "\n".join(
+                    _filesystem_fallback_selection(repo_root / project_dir)
+                )
         else:
-            selection_output = _run(
-                [
-                    args.dbt_bin,
-                    "ls",
-                    "--project-dir",
-                    str(project_dir),
-                    "--profiles-dir",
-                    str(temp_profiles.resolve()),
-                    "--target",
-                    args.target,
-                    "--selector",
-                    args.fallback_selector,
-                    "--output",
-                    "name",
-                ],
-                cwd=repo_root,
+            selection_output = "\n".join(
+                _filesystem_fallback_selection(repo_root / project_dir)
             )
 
     output_file.parent.mkdir(parents=True, exist_ok=True)

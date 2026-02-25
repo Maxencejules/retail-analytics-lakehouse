@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import tempfile
@@ -18,6 +19,67 @@ def _run(command: list[str], *, cwd: Path) -> str:
         capture_output=True,
     )
     return completed.stdout
+
+
+def _run_no_check(command: list[str], *, cwd: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        command,
+        cwd=str(cwd),
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+
+def _dedupe(items: list[str]) -> list[str]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for item in items:
+        if item and item not in seen:
+            ordered.append(item)
+            seen.add(item)
+    return ordered
+
+
+def _resolve_baseline_ref(repo_root: Path, configured_ref: str) -> str | None:
+    candidates: list[str] = [configured_ref]
+
+    github_base_ref = os.getenv("GITHUB_BASE_REF", "").strip()
+    if github_base_ref:
+        candidates.append(f"origin/{github_base_ref}")
+
+    origin_head = _run_no_check(
+        ["git", "symbolic-ref", "--quiet", "--short", "refs/remotes/origin/HEAD"],
+        cwd=repo_root,
+    )
+    if origin_head.returncode == 0 and origin_head.stdout.strip():
+        candidates.append(origin_head.stdout.strip())
+
+    candidates.extend(["origin/master", "origin/main"])
+
+    for candidate in _dedupe(candidates):
+        if candidate.startswith("origin/") and candidate not in {
+            "origin/HEAD",
+            "origin",
+        }:
+            branch_name = candidate.removeprefix("origin/")
+            _run_no_check(
+                ["git", "fetch", "origin", branch_name, "--depth", "1"], cwd=repo_root
+            )
+
+        exists = _run_no_check(
+            ["git", "rev-parse", "--verify", "--quiet", f"{candidate}^{{commit}}"],
+            cwd=repo_root,
+        )
+        if exists.returncode == 0:
+            if candidate != configured_ref:
+                print(
+                    f"Baseline ref '{configured_ref}' unavailable; "
+                    f"using '{candidate}' for slim CI state."
+                )
+            return candidate
+
+    return None
 
 
 def _resolve_profiles_source(profiles_dir: Path) -> Path:
@@ -93,7 +155,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--target", default="dev")
     parser.add_argument("--dbt-bin", default="dbt")
     parser.add_argument("--state-dir", default=".tmp/dbt-state")
-    parser.add_argument("--baseline-ref", default="origin/main")
+    parser.add_argument("--baseline-ref", default="origin/HEAD")
     parser.add_argument("--fallback-selector", default="phase2_governed_models")
     parser.add_argument("--output-file", default=".tmp/dbt-state/selection.txt")
     parser.add_argument("--skip-baseline-build", action="store_true")
@@ -125,16 +187,22 @@ def main(argv: list[str] | None = None) -> int:
         shutil.copy2(profiles_source, temp_profiles / "profiles.yml")
 
         if not manifest_path.exists() and not args.skip_baseline_build:
-            _run(["git", "fetch", "origin", "main", "--depth", "1"], cwd=repo_root)
-            _build_baseline_manifest(
-                repo_root=repo_root,
-                temp_root=temp_root,
-                baseline_ref=args.baseline_ref,
-                project_dir=project_dir,
-                profiles_file=temp_profiles / "profiles.yml",
-                dbt_bin=args.dbt_bin,
-                state_dir=state_dir,
-            )
+            resolved_baseline_ref = _resolve_baseline_ref(repo_root, args.baseline_ref)
+            if resolved_baseline_ref:
+                _build_baseline_manifest(
+                    repo_root=repo_root,
+                    temp_root=temp_root,
+                    baseline_ref=resolved_baseline_ref,
+                    project_dir=project_dir,
+                    profiles_file=temp_profiles / "profiles.yml",
+                    dbt_bin=args.dbt_bin,
+                    state_dir=state_dir,
+                )
+            else:
+                print(
+                    "Unable to resolve a baseline git ref for dbt slim CI; "
+                    "falling back to selector mode."
+                )
 
         _run(
             [

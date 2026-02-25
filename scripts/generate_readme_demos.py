@@ -17,7 +17,6 @@ import time
 import urllib.request
 
 import pyarrow as pa
-import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 from playwright.sync_api import sync_playwright
 
@@ -71,12 +70,16 @@ def _run_command(
     )
 
     merged_output = f"{completed.stdout}\n{completed.stderr}".strip()
-    output_lines = [line.rstrip() for line in merged_output.splitlines() if line.strip()]
+    output_lines = [
+        line.rstrip() for line in merged_output.splitlines() if line.strip()
+    ]
     max_lines = 24
     for line in output_lines[:max_lines]:
         transcript.append(line)
     if len(output_lines) > max_lines:
-        transcript.append(f"... ({len(output_lines) - max_lines} additional lines omitted)")
+        transcript.append(
+            f"... ({len(output_lines) - max_lines} additional lines omitted)"
+        )
 
     transcript.append(f"[exit {completed.returncode}]")
     transcript.append("")
@@ -130,7 +133,9 @@ def _write_gold_datasets(csv_path: Path, gold_root: Path) -> tuple[int, int]:
             }
         )
 
-    products_by_date: dict[date, list[dict[str, float | str | date]]] = defaultdict(list)
+    products_by_date: dict[date, list[dict[str, float | str | date]]] = defaultdict(
+        list
+    )
     for (event_date, product_id), metrics in by_product.items():
         products_by_date[event_date].append(
             {
@@ -143,7 +148,9 @@ def _write_gold_datasets(csv_path: Path, gold_root: Path) -> tuple[int, int]:
 
     top_product_rows = []
     for event_date, product_rows in products_by_date.items():
-        ranked = sorted(product_rows, key=lambda item: item["daily_revenue"], reverse=True)[:10]
+        ranked = sorted(
+            product_rows, key=lambda item: item["daily_revenue"], reverse=True
+        )[:10]
         top_product_rows.extend(ranked)
 
     if gold_root.exists():

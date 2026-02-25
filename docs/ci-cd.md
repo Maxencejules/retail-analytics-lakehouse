@@ -8,8 +8,8 @@ GitHub Actions workflow:
 It runs these stages in order:
 1. Pre-commit checks
 2. Lint checks
-3. dbt governance contract validation
-4. dbt slim selection validation (`state:modified+`)
+3. dbt slim selection validation (`state:modified+`)
+4. dbt governance contract validation
 5. Phase 3 policy artifact validation
 6. Unit tests
 7. Integration test:
@@ -17,6 +17,11 @@ It runs these stages in order:
    - run batch ETL
    - validate Gold outputs exist and contain rows
    - verify ETL fails on invalid data (fail-fast quality gate)
+8. ETL benchmark on sample dataset:
+   - runs timed Spark ETL iterations
+   - captures peak process-tree memory
+   - computes throughput (`rows/sec`)
+   - uploads JSON/Markdown benchmark report as CI artifact
 
 ## Makefile Targets
 
@@ -29,6 +34,7 @@ Main targets:
 - `make lint`: run Ruff and Black checks.
 - `make test-unit`: run unit tests.
 - `make test-integration`: run end-to-end integration validation.
+- `make benchmark-etl`: run ETL benchmark and emit JSON/Markdown results in `perf/results/`.
 - `make ci`: run lint + unit + integration checks.
 - `make airflow-dag-validate`: compile-check Airflow DAG Python files.
 - `make dbt-build DBT_TARGET=dev`: run dbt models + tests for a target.
@@ -86,3 +92,4 @@ make soda-scan TARGET_ENV=dev
 - **Phase 3 policy validation** prevents invalid cost/performance controls from deployment.
 - **Soda alert routing** creates fast feedback for production data quality incidents.
 - **Run metadata artifacts** provide auditable DAG run traces for incident response and release governance.
+- **Benchmark artifacts** provide objective runtime/memory/throughput visibility for ETL trend tracking.

@@ -58,3 +58,15 @@ jobs:
 
       - name: Run integration test (generator + batch ETL + Gold validation)
         run: make test-integration
+
+      - name: Run ETL benchmark on sample dataset
+        run: make benchmark-etl BENCHMARK_ROWS=2000 BENCHMARK_ITERATIONS=2 BENCHMARK_WARMUP_ITERATIONS=1 BENCHMARK_OUTPUT=perf/results/ci/etl-benchmark.json
+
+      - name: Upload ETL benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: etl-benchmark-results
+          path: |
+            perf/results/ci/etl-benchmark.json
+            perf/results/ci/etl-benchmark.md
+          if-no-files-found: error

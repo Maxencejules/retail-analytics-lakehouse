@@ -11,6 +11,10 @@ DBT_TARGET ?= dev
 TARGET_ENV ?= dev
 DBT_STATE_DIR ?= .tmp/dbt-state
 DBT_SLIM_SELECTION_FILE ?= .tmp/dbt-state/selection.txt
+BENCHMARK_ROWS ?= 5000
+BENCHMARK_ITERATIONS ?= 3
+BENCHMARK_WARMUP_ITERATIONS ?= 1
+BENCHMARK_OUTPUT ?= perf/results/latest/etl-benchmark.json
 
 ifeq ($(OS),Windows_NT)
 VENV_BIN := $(VENV)/Scripts
@@ -25,7 +29,7 @@ PY := $(VENV_BIN)/python
 	airflow-dag-validate dbt-build dbt-docs soda-scan monitoring-up monitoring-down \
 	dbt-source-freshness dbt-phase2-gate dbt-governance-validate \
 	compact-lakehouse phase3-policy-validate phase3-gate platform-check \
-	dbt-slim-ci
+	dbt-slim-ci benchmark-etl
 
 init:
 >$(PYTHON) -m venv $(VENV)
@@ -48,6 +52,13 @@ test-integration:
 >$(PY) scripts/ci_integration_test.py --rows 1000
 
 test: test-unit test-integration
+
+benchmark-etl:
+>$(PY) scripts/benchmark_etl.py \
+>	--rows $(BENCHMARK_ROWS) \
+>	--iterations $(BENCHMARK_ITERATIONS) \
+>	--warmup-iterations $(BENCHMARK_WARMUP_ITERATIONS) \
+>	--output $(BENCHMARK_OUTPUT)
 
 precommit:
 >$(PY) -m pre_commit run --all-files

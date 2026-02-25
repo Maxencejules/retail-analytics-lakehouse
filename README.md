@@ -11,6 +11,7 @@ Production-grade monorepo for a modular retail analytics lakehouse spanning inge
 - [Local End-to-End Workflow](#local-end-to-end-workflow)
 - [Operational Runbook](#operational-runbook)
 - [Configuration](#configuration)
+- [Performance Benchmarking](#performance-benchmarking)
 - [Federated Queries with Trino](#federated-queries-with-trino)
 - [Quality Standards and CI](#quality-standards-and-ci)
 - [Security](#security)
@@ -71,6 +72,7 @@ Detailed architecture references:
 | `dashboard/` | Streamlit dashboard and data-access layer for KPI consumption. |
 | `scripts/` | CI and validation scripts (integration, governance, policy, quality). |
 | `tests/` | Unit tests for ingestion and Spark transformation logic. |
+| `perf/` | Benchmark scripts documentation and generated performance reports. |
 | `docs/` | Architecture, cloud setup, CI/CD, and operational guidance. |
 
 ## Getting Started
@@ -276,6 +278,21 @@ Configuration templates and setup references:
 - [infra/aws/env/prod.env.example](infra/aws/env/prod.env.example)
 - [infra/airflow/config/airflow.env.example](infra/airflow/config/airflow.env.example)
 
+## Performance Benchmarking
+
+Run ETL benchmarks locally:
+
+```bash
+make benchmark-etl
+```
+
+Benchmark outputs:
+- JSON: `perf/results/latest/etl-benchmark.json`
+- Markdown report: `perf/results/latest/etl-benchmark.md`
+
+Benchmark details and advanced options:
+- [perf/README.md](perf/README.md)
+
 ## Quality Standards and CI
 
 Local development standards:
@@ -296,6 +313,7 @@ CI quality gates:
 5. Phase 3 policy artifact validation
 6. Unit tests
 7. Integration tests
+8. ETL benchmark artifact generation (runtime/memory/throughput on sample data)
 
 Detailed CI/CD guide: [docs/ci-cd.md](docs/ci-cd.md)
 
@@ -318,6 +336,7 @@ Additional recommended practices:
 - Platform architecture: [docs/architecture.md](docs/architecture.md)
 - Platform evolution roadmap: [docs/platform-evolution.md](docs/platform-evolution.md)
 - Cost/performance automation: [docs/cost-performance.md](docs/cost-performance.md)
+- Performance benchmarking: [perf/README.md](perf/README.md)
 - AWS setup: [docs/aws-setup.md](docs/aws-setup.md)
 - Federated querying with Trino: [docs/federated-querying.md](docs/federated-querying.md)
 - CI/CD quality gates: [docs/ci-cd.md](docs/ci-cd.md)

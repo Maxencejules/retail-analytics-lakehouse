@@ -55,6 +55,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         help="Directory for model artifacts.",
     )
     parser.add_argument("--epochs", type=int, default=30)
+    parser.add_argument("--currency", choices=("CAD", "USD", "GBP"), default="CAD")
     parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--learning-rate", type=float, default=1e-3)
     parser.add_argument("--validation-ratio", type=float, default=0.2)
@@ -111,7 +112,7 @@ def _run_training(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
     torch = _load_torch()
     _set_seed(args.seed, torch)
 
-    records = load_gold_daily_revenue(args.gold_path)
+    records = load_gold_daily_revenue(args.gold_path, currency=args.currency)
     features, targets, _, _ = build_lagged_sales_examples(records)
 
     if len(features) < args.min_samples:
@@ -228,6 +229,7 @@ def _run_training(args: argparse.Namespace) -> tuple[dict[str, Any], Path]:
     model_path = run_dir / "model.pt"
     checkpoint = {
         "state_dict": best_state,
+        "currency": args.currency,
         "feature_names": list(FEATURE_NAMES),
         "feature_mean": feature_mean.tolist(),
         "feature_std": feature_std.tolist(),

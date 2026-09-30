@@ -7,6 +7,9 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   quality-and-tests:
     name: Lint, Unit, and Integration
@@ -58,6 +61,17 @@ jobs:
 
       - name: Run integration test (generator + batch ETL + Gold validation)
         run: make test-integration
+
+      - name: Verify retained history, currencies, corrections and replay with real Spark
+        run: ./.venv/bin/python scripts/verify_batch_history.py --output .tmp/batch-history-proof.json
+
+      - name: Upload independent batch history proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: batch-history-proof
+          path: .tmp/batch-history-proof.json
+          include-hidden-files: true
+          if-no-files-found: error
 
       - name: Run ETL benchmark on sample dataset
         run: make benchmark-etl BENCHMARK_ROWS=2000 BENCHMARK_ITERATIONS=2 BENCHMARK_WARMUP_ITERATIONS=1 BENCHMARK_OUTPUT=perf/results/ci/etl-benchmark.json

@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timezone
-import os
-from pathlib import Path
 
 import pytest
 from pyspark.sql import SparkSession
@@ -69,27 +67,6 @@ def _create_bronze_df(spark: SparkSession, rows: list[dict[str, object]]):
 
 def _create_silver_df(spark: SparkSession, rows: list[dict[str, object]]):
     return spark.createDataFrame(rows, schema=SILVER_TEST_SCHEMA)
-
-
-@pytest.fixture(scope="session")
-def spark() -> SparkSession:
-    tmp_root = Path(".tmp/pytest-spark")
-    tmp_root.mkdir(parents=True, exist_ok=True)
-    resolved_tmp = str(tmp_root.resolve())
-
-    os.environ["TEMP"] = resolved_tmp
-    os.environ["TMP"] = resolved_tmp
-
-    session = (
-        SparkSession.builder.master("local[2]")
-        .appName("batch-transforms-tests")
-        .config("spark.ui.enabled", "false")
-        .config("spark.sql.session.timeZone", "UTC")
-        .config("spark.local.dir", resolved_tmp)
-        .getOrCreate()
-    )
-    yield session
-    session.stop()
 
 
 def test_silver_casts_normalizes_and_handles_null_promo(spark: SparkSession) -> None:

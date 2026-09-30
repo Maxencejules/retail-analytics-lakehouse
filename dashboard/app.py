@@ -15,6 +15,7 @@ except ImportError:  # pragma: no cover - optional dependency path.
     alt = None
 
 from dashboard.config import DashboardConfig
+from dashboard.insights import build_highlight_insights, format_currency
 from dashboard.data_access import (
     DashboardFilters,
     DashboardRepository,
@@ -257,10 +258,6 @@ def load_revenue_trend(
     return _repo.revenue_trend(filters)
 
 
-def format_currency(value: float) -> str:
-    return f"${value:,.2f}"
-
-
 def format_percent_delta(current: float, previous: float | None) -> str | None:
     if previous is None or previous <= 0:
         return None
@@ -460,60 +457,6 @@ def previous_period_filters(
     )
 
 
-def build_highlight_insights(
-    *,
-    total_revenue: float,
-    total_orders: int,
-    top_stores: pd.DataFrame,
-    top_products: pd.DataFrame,
-    revenue_trend: pd.DataFrame,
-) -> list[str]:
-    insights: list[str] = []
-
-    if total_orders > 0:
-        insights.append(
-            f"Average order value tracks at {format_currency(total_revenue / total_orders)} across {total_orders:,} orders."
-        )
-
-    if not top_stores.empty and total_revenue > 0:
-        stores_frame = top_stores.copy()
-        stores_frame["revenue"] = pd.to_numeric(
-            stores_frame["revenue"], errors="coerce"
-        ).fillna(0.0)
-        leader = stores_frame.sort_values("revenue", ascending=False).iloc[0]
-        leader_name = str(leader.get("store_name", leader.get("store_id", "Top Store")))
-        leader_share = (float(leader["revenue"]) / total_revenue) * 100
-        insights.append(
-            f"{leader_name} is the top store and contributes {leader_share:.1f}% of selected-period revenue."
-        )
-
-    if not top_products.empty and total_revenue > 0:
-        products_frame = top_products.copy()
-        products_frame["revenue"] = pd.to_numeric(
-            products_frame["revenue"], errors="coerce"
-        ).fillna(0.0)
-        leader = products_frame.sort_values("revenue", ascending=False).iloc[0]
-        leader_name = str(
-            leader.get("product_name", leader.get("product_id", "Top Product"))
-        )
-        leader_share = (float(leader["revenue"]) / total_revenue) * 100
-        insights.append(
-            f"{leader_name} leads products with {leader_share:.1f}% revenue share in this slice."
-        )
-
-    if not revenue_trend.empty:
-        trend = revenue_trend.copy()
-        trend["revenue"] = pd.to_numeric(trend["revenue"], errors="coerce").fillna(0.0)
-        peak_row = trend.loc[trend["revenue"].idxmax()]
-        peak_date = pd.to_datetime(peak_row["report_date"]).date()
-        peak_value = float(peak_row["revenue"])
-        insights.append(
-            f"Peak daily revenue hit {format_currency(peak_value)} on {peak_date:%b %d, %Y}."
-        )
-
-    return insights[:4]
-
-
 def render_insight_panel(insights: list[str]) -> None:
     if not insights:
         return
@@ -541,6 +484,7 @@ def render_hero(config: DashboardConfig, filters: DashboardFilters) -> None:
             <p>Track revenue, order volume, and top contributors with a single operational view.</p>
             <div class="dashboard-chip-row">
                 <span class="dashboard-chip">Source: {config.data_source.upper()}</span>
+                <span class="dashboard-chip">Currency: {config.currency} (no FX conversion)</span>
                 <span class="dashboard-chip">Range: {format_date_range(filters.start_date, filters.end_date)}</span>
                 <span class="dashboard-chip">Scope: {store_scope}</span>
             </div>
@@ -697,6 +641,24 @@ def format_ranked_table(
 def render_dashboard(repo: DashboardRepository, config: DashboardConfig) -> None:
     filters, min_date = build_filters(repo)
     render_hero(config, filters)
+    gold_products = config.data_source == "gold"
+    product_title = (
+        "Daily top-10 product candidates (truncated)"
+        if gold_products
+        else "Top products by revenue"
+    )
+    if gold_products:
+        if filters.store_ids:
+            st.info(
+                "Product ranking is unavailable for a store-filtered Gold view: "
+                "the daily top-10 aggregates have no store attribution. "
+                "Use warehouse mode for product rankings by store."
+            )
+        else:
+            st.caption(
+                "Gold product results include only each day's top-10 candidates; "
+                "their period totals may omit other sales and are not a complete product ranking."
+            )
 
     prior_filters = previous_period_filters(filters, min_date=min_date)
 
@@ -760,6 +722,7 @@ def render_dashboard(repo: DashboardRepository, config: DashboardConfig) -> None
         top_stores=top_stores,
         top_products=top_products,
         revenue_trend=revenue_trend,
+        product_ranking_complete=not gold_products,
     )
     render_insight_panel(insights)
 
@@ -780,7 +743,7 @@ def render_dashboard(repo: DashboardRepository, config: DashboardConfig) -> None
                 top_products,
                 id_column="product_id",
                 name_column="product_name",
-                title="Top products by revenue",
+                title=product_title,
                 color_hex="#d97706",
             )
 
@@ -825,7 +788,8 @@ def render_dashboard(repo: DashboardRepository, config: DashboardConfig) -> None
                 mime="text/csv",
             )
         with table_col_2:
-            st.subheader("Top 5 Products")
+            st.subheader(product_title)
+            st.caption("Revenue Share is relative to the displayed rows only.")
             st.dataframe(
                 products_table,
                 hide_index=True,
@@ -844,6 +808,7 @@ def render_dashboard(repo: DashboardRepository, config: DashboardConfig) -> None
                 data=products_table.to_csv(index=False).encode("utf-8"),
                 file_name="top_products.csv",
                 mime="text/csv",
+                disabled=gold_products and bool(filters.store_ids),
             )
 
     st.caption(

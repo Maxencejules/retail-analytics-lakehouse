@@ -15,6 +15,7 @@ class DashboardConfig:
     warehouse_schema: str
     gold_base_path: str
     cache_ttl_seconds: int
+    currency: str = "CAD"
 
     @classmethod
     def from_env(cls) -> "DashboardConfig":
@@ -27,9 +28,12 @@ class DashboardConfig:
             warehouse_schema=os.getenv("WAREHOUSE_SCHEMA", "warehouse").strip(),
             gold_base_path=os.getenv("GOLD_BASE_PATH", "data/lakehouse/gold").strip(),
             cache_ttl_seconds=int(os.getenv("DASHBOARD_CACHE_TTL_SECONDS", "300")),
+            currency=os.getenv("DASHBOARD_CURRENCY", "CAD").strip().upper(),
         )
 
     def validate(self) -> None:
+        if self.currency not in {"CAD", "USD", "GBP"}:
+            raise ValueError("DASHBOARD_CURRENCY must be CAD, USD, or GBP")
         if self.data_source not in {"warehouse", "gold"}:
             raise ValueError("DASHBOARD_DATA_SOURCE must be 'warehouse' or 'gold'")
         if self.cache_ttl_seconds <= 0:

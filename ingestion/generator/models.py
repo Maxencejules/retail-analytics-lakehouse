@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation
+import math
 from typing import Any, Mapping
 from uuid import UUID
 
@@ -85,13 +87,13 @@ class TransactionEvent:
                 f"payment_method must be one of {sorted(ALLOWED_PAYMENT_METHODS)}"
             )
 
-        if not isinstance(self.quantity, int):
+        if isinstance(self.quantity, bool) or not isinstance(self.quantity, int):
             raise ValueError("quantity must be an integer")
-        if self.quantity <= 0:
-            raise ValueError("quantity must be > 0")
+        if not 0 < self.quantity <= 2_147_483_647:
+            raise ValueError("quantity must be > 0 and fit a signed 32-bit integer")
 
-        if self.unit_price <= 0:
-            raise ValueError("unit_price must be > 0")
+        if not math.isfinite(self.unit_price) or self.unit_price <= 0:
+            raise ValueError("unit_price must be > 0 and finite")
 
         if self.promo_id is not None:
             self.promo_id = _ensure_non_empty_string("promo_id", self.promo_id)
@@ -163,8 +165,16 @@ def validate_transaction_payload(payload: Mapping[str, Any]) -> TransactionEvent
         raise ValueError("promo_id must be a string or null")
 
     try:
-        quantity = int(payload["quantity"])
-    except (TypeError, ValueError) as exc:
+        if isinstance(payload["quantity"], bool):
+            raise ValueError("boolean quantity")
+        parsed_quantity = Decimal(str(payload["quantity"]))
+        if (
+            not parsed_quantity.is_finite()
+            or parsed_quantity != parsed_quantity.to_integral_value()
+        ):
+            raise ValueError("fractional or nonfinite quantity")
+        quantity = int(parsed_quantity)
+    except (TypeError, ValueError, InvalidOperation) as exc:
         raise ValueError("quantity must be an integer") from exc
 
     try:
@@ -175,13 +185,13 @@ def validate_transaction_payload(payload: Mapping[str, Any]) -> TransactionEvent
     return TransactionEvent(
         transaction_id=str(payload["transaction_id"]),
         ts_utc=ts_utc,
-        store_id=str(payload["store_id"]),
-        customer_id=str(payload["customer_id"]),
-        product_id=str(payload["product_id"]),
+        store_id=payload["store_id"],
+        customer_id=payload["customer_id"],
+        product_id=payload["product_id"],
         quantity=quantity,
         unit_price=unit_price,
-        currency=str(payload["currency"]),
-        payment_method=str(payload["payment_method"]),
-        channel=str(payload["channel"]),
+        currency=payload["currency"],
+        payment_method=payload["payment_method"],
+        channel=payload["channel"],
         promo_id=promo_id,
     )

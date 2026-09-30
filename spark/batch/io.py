@@ -41,7 +41,7 @@ def read_raw_transactions(
         return (
             spark.read.format("csv")
             .option("header", "true")
-            .option("mode", "PERMISSIVE")
+            .option("mode", "FAILFAST")
             .load(input_path)
         )
 
@@ -55,9 +55,18 @@ def write_dataset(
     table_format: str,
     partition_by: list[str],
     mode: str = "overwrite",
+    partition_overwrite_mode: str = "static",
+    replace_where: str | None = None,
 ) -> None:
     """Write dataset with partitioning in an idempotent overwrite mode."""
-    (df.write.format(table_format).mode(mode).partitionBy(*partition_by).save(path))
+    writer = df.write.format(table_format).mode(mode).partitionBy(*partition_by)
+    if replace_where is not None:
+        writer = writer.option("partitionOverwriteMode", "static").option(
+            "replaceWhere", replace_where
+        )
+    else:
+        writer = writer.option("partitionOverwriteMode", partition_overwrite_mode)
+    writer.save(path)
     LOGGER.info(
         "dataset_written",
         extra={

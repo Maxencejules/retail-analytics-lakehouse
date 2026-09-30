@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import gzip
 import logging
+import math
 from pathlib import Path
 import re
 import sys
@@ -23,7 +24,7 @@ if __package__ in {None, ""}:
 from ingestion.generator.logging_utils import configure_logging
 from ingestion.generator.models import TRANSACTION_FIELD_ORDER
 
-ALLOWED_CURRENCIES: tuple[str, ...] = ("CAD", "USD")
+ALLOWED_CURRENCIES: tuple[str, ...] = ("CAD", "USD", "GBP")
 ALLOWED_PAYMENT_METHODS: tuple[str, ...] = (
     "credit_card",
     "debit_card",
@@ -54,13 +55,7 @@ SOURCE_HEADER_CANDIDATES: dict[str, tuple[str, ...]] = {
     "country": ("country",),
 }
 
-TIMESTAMP_FORMATS: tuple[str, ...] = (
-    "%m/%d/%Y %H:%M",
-    "%m/%d/%Y %H:%M:%S",
-    "%d/%m/%Y %H:%M",
-    "%d/%m/%Y %H:%M:%S",
-    "%Y-%m-%d %H:%M:%S",
-)
+DEFAULT_TIMESTAMP_FORMAT = "%m/%d/%Y %H:%M"
 
 
 @dataclass(slots=True, frozen=True)
@@ -90,7 +85,11 @@ def _parse_integer(value: str) -> int | None:
     except ValueError:
         return None
 
-    if not parsed.is_integer():
+    if (
+        not math.isfinite(parsed)
+        or not parsed.is_integer()
+        or not 0 < parsed <= 2_147_483_647
+    ):
         return None
     return int(parsed)
 
@@ -101,24 +100,22 @@ def _parse_float(value: str) -> float | None:
         return None
 
     try:
-        return float(cleaned)
+        parsed = float(cleaned)
+        return parsed if math.isfinite(parsed) else None
     except ValueError:
         return None
 
 
-def _parse_invoice_timestamp(value: str) -> datetime | None:
+def _parse_invoice_timestamp(value: str, timestamp_format: str) -> datetime | None:
     cleaned = value.strip()
     if not cleaned:
         return None
 
-    for fmt in TIMESTAMP_FORMATS:
-        try:
-            parsed = datetime.strptime(cleaned, fmt)
-        except ValueError:
-            continue
-        return parsed.replace(tzinfo=timezone.utc)
-
-    return None
+    try:
+        parsed = datetime.strptime(cleaned, timestamp_format)
+    except ValueError:
+        return None
+    return parsed.replace(tzinfo=timezone.utc)
 
 
 def _normalize_customer_id(value: str) -> str | None:
@@ -127,20 +124,9 @@ def _normalize_customer_id(value: str) -> str | None:
         return None
 
     parsed = _parse_float(cleaned)
-    if parsed is not None:
-        if parsed <= 0:
-            return None
-        if parsed.is_integer():
-            return f"CUST-{int(parsed):08d}"
-        digits = re.sub(r"[^0-9]+", "", cleaned)
-        if digits:
-            return f"CUST-{digits}"
+    if parsed is None or parsed <= 0 or not parsed.is_integer():
         return None
-
-    token = _sanitize_token(cleaned)
-    if not token:
-        return None
-    return f"CUST-{token}"
+    return f"CUST-{int(parsed):08d}"
 
 
 def _normalize_product_id(value: str) -> str | None:
@@ -216,6 +202,7 @@ def map_uci_row(
     currency: str,
     payment_method: str,
     channel: str,
+    timestamp_format: str = DEFAULT_TIMESTAMP_FORMAT,
 ) -> dict[str, object] | None:
     """Map one source row into the canonical transaction schema."""
     invoice_no = row[column_mapping["invoice_no"]].strip()
@@ -224,7 +211,9 @@ def map_uci_row(
 
     quantity = _parse_integer(row[column_mapping["quantity"]])
     unit_price = _parse_float(row[column_mapping["unit_price"]])
-    invoice_ts_utc = _parse_invoice_timestamp(row[column_mapping["invoice_ts"]])
+    invoice_ts_utc = _parse_invoice_timestamp(
+        row[column_mapping["invoice_ts"]], timestamp_format
+    )
 
     if quantity is None or unit_price is None or invoice_ts_utc is None:
         return None
@@ -268,9 +257,10 @@ def convert_uci_csv(
     input_path: Path,
     output_path: Path,
     input_encoding: str = "ISO-8859-1",
-    currency: str = "USD",
+    currency: str = "GBP",
     payment_method: str = "credit_card",
     channel: str = "online",
+    timestamp_format: str = DEFAULT_TIMESTAMP_FORMAT,
 ) -> ConversionStats:
     """Normalize a UCI CSV export into a compressed canonical transaction CSV."""
     currency_value = currency.upper()
@@ -313,6 +303,7 @@ def convert_uci_csv(
                     currency=currency_value,
                     payment_method=payment_method_value,
                     channel=channel_value,
+                    timestamp_format=timestamp_format,
                 )
                 if mapped is None:
                     continue
@@ -349,8 +340,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Input CSV encoding (Online Retail exports are often ISO-8859-1).",
     )
     parser.add_argument(
+        "--timestamp-format",
+        default=DEFAULT_TIMESTAMP_FORMAT,
+        help="Explicit strptime format for calendar timestamps, assumed UTC; no date-order guessing.",
+    )
+    parser.add_argument(
         "--currency",
-        default="USD",
+        default="GBP",
         choices=ALLOWED_CURRENCIES,
         help="Output currency label. Prices are not FX-converted.",
     )
@@ -388,6 +384,7 @@ def main(argv: list[str] | None = None) -> int:
         currency=args.currency,
         payment_method=args.payment_method,
         channel=args.channel,
+        timestamp_format=args.timestamp_format,
     )
     logger.info(
         "uci_online_retail_conversion_complete",

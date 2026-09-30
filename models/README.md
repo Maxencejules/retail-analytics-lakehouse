@@ -1,5 +1,7 @@
 # PyTorch ML Integrations
 
+Train and score with `--currency CAD|USD|GBP` (CAD default). The Gold loader reads Hive event-date partitions and selects one currency; new checkpoints record currency and scoring rejects mismatched or unlabelled legacy checkpoints. Rebuild legacy Gold without a currency column and retrain old checkpoints. The focused batch proof checks loading/aggregation; it does not validate PyTorch training quality or chronological/generalization claims.
+
 This directory contains PyTorch-based ML utilities built on Gold-layer data.
 
 ## Available Scripts

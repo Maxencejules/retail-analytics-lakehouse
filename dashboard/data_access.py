@@ -68,7 +68,9 @@ class DashboardRepository(ABC):
 class PostgresWarehouseRepository(DashboardRepository):
     """Warehouse-backed implementation using SQL aggregation queries."""
 
-    def __init__(self, dsn: str, schema: str = "warehouse") -> None:
+    def __init__(
+        self, dsn: str, schema: str = "warehouse", currency: str = "CAD"
+    ) -> None:
         try:
             from sqlalchemy import create_engine
         except ImportError as exc:  # pragma: no cover
@@ -77,6 +79,7 @@ class PostgresWarehouseRepository(DashboardRepository):
             ) from exc
 
         self.schema = schema
+        self.currency = _validated_currency(currency)
         self._create_engine = create_engine
         self._engine = self._create_engine(dsn, pool_pre_ping=True, future=True)
 
@@ -87,8 +90,11 @@ class PostgresWarehouseRepository(DashboardRepository):
                 MAX(dt.full_date) AS max_date
             FROM {self.schema}.fact_sales fs
             INNER JOIN {self.schema}.dim_time dt ON dt.time_sk = fs.time_sk
+            WHERE fs.currency = %(currency)s
         """
-        frame = pd.read_sql_query(query, self._engine)
+        frame = pd.read_sql_query(
+            query, self._engine, params={"currency": self.currency}
+        )
         if (
             frame.empty
             or frame.loc[0, "min_date"] is None
@@ -189,27 +195,32 @@ class PostgresWarehouseRepository(DashboardRepository):
         frame["report_date"] = pd.to_datetime(frame["report_date"])
         return frame
 
-    @staticmethod
     def _time_filter_sql(
+        self,
         filters: DashboardFilters | None,
     ) -> tuple[str, dict[str, Any]]:
         if filters is None:
-            return "", {}
+            return "WHERE fs.currency = %(currency)s", {"currency": self.currency}
         filters.validate()
         return (
-            "WHERE dt.full_date BETWEEN %(start_date)s AND %(end_date)s",
-            {"start_date": filters.start_date, "end_date": filters.end_date},
+            "WHERE dt.full_date BETWEEN %(start_date)s AND %(end_date)s AND fs.currency = %(currency)s",
+            {
+                "start_date": filters.start_date,
+                "end_date": filters.end_date,
+                "currency": self.currency,
+            },
         )
 
-    @staticmethod
-    def _fact_filter_sql(filters: DashboardFilters) -> tuple[str, dict[str, Any]]:
+    def _fact_filter_sql(self, filters: DashboardFilters) -> tuple[str, dict[str, Any]]:
         filters.validate()
         where_clauses = [
             "dt.full_date BETWEEN %(start_date)s AND %(end_date)s",
+            "fs.currency = %(currency)s",
         ]
         params: dict[str, Any] = {
             "start_date": filters.start_date,
             "end_date": filters.end_date,
+            "currency": self.currency,
         }
 
         if filters.store_ids:
@@ -227,7 +238,7 @@ class GoldLayerRepository(DashboardRepository):
     This mode uses aggregated Gold outputs and is optimized for local analytics.
     """
 
-    def __init__(self, gold_base_path: str) -> None:
+    def __init__(self, gold_base_path: str, currency: str = "CAD") -> None:
         try:
             import duckdb
         except ImportError as exc:  # pragma: no cover
@@ -236,6 +247,7 @@ class GoldLayerRepository(DashboardRepository):
             ) from exc
 
         self._duckdb = duckdb
+        self.currency = _validated_currency(currency)
         self.gold_base_path = gold_base_path.rstrip("/")
         self._connection = self._duckdb.connect(database=":memory:")
 
@@ -252,6 +264,7 @@ class GoldLayerRepository(DashboardRepository):
                 MIN(event_date) AS min_date,
                 MAX(event_date) AS max_date
             FROM read_parquet('{self.daily_store_path}')
+            WHERE currency = '{self.currency}'
         """
         frame = self._connection.execute(query).fetchdf()
         if (
@@ -263,7 +276,7 @@ class GoldLayerRepository(DashboardRepository):
         return frame.loc[0, "min_date"], frame.loc[0, "max_date"]
 
     def list_stores(self, filters: DashboardFilters | None = None) -> list[str]:
-        conditions = []
+        conditions = [f"currency = '{self.currency}'"]
         if filters is not None:
             filters.validate()
             conditions.append(
@@ -290,6 +303,7 @@ class GoldLayerRepository(DashboardRepository):
                 COALESCE(SUM(transaction_count), 0)::BIGINT AS total_orders
             FROM read_parquet('{self.daily_store_path}')
             WHERE event_date BETWEEN DATE '{filters.start_date}' AND DATE '{filters.end_date}'
+            AND currency = '{self.currency}'
             {store_filter}
         """
         row = self._connection.execute(query).fetchdf().iloc[0]
@@ -310,6 +324,7 @@ class GoldLayerRepository(DashboardRepository):
                 SUM(transaction_count)::BIGINT AS orders
             FROM read_parquet('{self.daily_store_path}')
             WHERE event_date BETWEEN DATE '{filters.start_date}' AND DATE '{filters.end_date}'
+            AND currency = '{self.currency}'
             {store_filter}
             GROUP BY store_id
             ORDER BY revenue DESC
@@ -321,6 +336,10 @@ class GoldLayerRepository(DashboardRepository):
         self, filters: DashboardFilters, *, limit: int = 5
     ) -> pd.DataFrame:
         filters.validate()
+        # These daily candidate aggregates have no store attribution.
+        if filters.store_ids:
+            columns = ["product_id", "product_name", "revenue", "orders"]
+            return pd.DataFrame(columns=columns)
         query = f"""
             SELECT
                 product_id,
@@ -329,6 +348,7 @@ class GoldLayerRepository(DashboardRepository):
                 SUM(transaction_count)::BIGINT AS orders
             FROM read_parquet('{self.top_products_path}')
             WHERE event_date BETWEEN DATE '{filters.start_date}' AND DATE '{filters.end_date}'
+            AND currency = '{self.currency}'
             GROUP BY product_id
             ORDER BY revenue DESC
             LIMIT {int(limit)}
@@ -344,6 +364,7 @@ class GoldLayerRepository(DashboardRepository):
                 SUM(daily_revenue)::DOUBLE AS revenue
             FROM read_parquet('{self.daily_store_path}')
             WHERE event_date BETWEEN DATE '{filters.start_date}' AND DATE '{filters.end_date}'
+            AND currency = '{self.currency}'
             {store_filter}
             GROUP BY event_date
             ORDER BY event_date
@@ -368,5 +389,14 @@ def create_repository(config: DashboardConfig) -> DashboardRepository:
         return PostgresWarehouseRepository(
             dsn=config.warehouse_dsn,
             schema=config.warehouse_schema,
+            currency=config.currency,
         )
-    return GoldLayerRepository(gold_base_path=config.gold_base_path)
+    return GoldLayerRepository(
+        gold_base_path=config.gold_base_path, currency=config.currency
+    )
+
+
+def _validated_currency(currency: str) -> str:
+    if currency not in {"CAD", "USD", "GBP"}:
+        raise ValueError("currency must be CAD, USD, or GBP")
+    return currency

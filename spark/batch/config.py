@@ -44,7 +44,9 @@ class PipelineConfig:
             raise ValueError("local output_target cannot use an s3:// output_base_path")
 
         try:
-            date.fromisoformat(self.ingestion_date)
+            parsed_date = date.fromisoformat(self.ingestion_date)
+            if parsed_date.isoformat() != self.ingestion_date:
+                raise ValueError("noncanonical date")
         except ValueError as exc:
             raise ValueError("ingestion_date must be in YYYY-MM-DD format") from exc
 

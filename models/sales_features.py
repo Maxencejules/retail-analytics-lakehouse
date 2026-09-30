@@ -39,7 +39,9 @@ def _coerce_date(value: Any) -> date:
     raise ValueError(f"Unsupported date value: {value!r}")
 
 
-def load_gold_daily_revenue(path: str) -> list[SalesDailyRecord]:
+def load_gold_daily_revenue(
+    path: str, *, currency: str = "CAD"
+) -> list[SalesDailyRecord]:
     """
     Load Gold daily revenue records from a Parquet dataset path.
 
@@ -52,7 +54,13 @@ def load_gold_daily_revenue(path: str) -> list[SalesDailyRecord]:
             "pyarrow is required to read Gold-layer parquet data."
         ) from exc
 
-    dataset = ds.dataset(path, format="parquet")
+    if currency not in {"CAD", "USD", "GBP"}:
+        raise ValueError("currency must be CAD, USD, or GBP")
+    dataset = ds.dataset(path, format="parquet", partitioning="hive")
+    if "currency" not in dataset.schema.names:
+        raise ValueError(
+            "Gold currency column is missing; rebuild Gold before ML loading"
+        )
     table = dataset.to_table(
         columns=[
             "store_id",
@@ -60,7 +68,8 @@ def load_gold_daily_revenue(path: str) -> list[SalesDailyRecord]:
             "daily_revenue",
             "units_sold",
             "transaction_count",
-        ]
+        ],
+        filter=ds.field("currency") == currency,
     )
     data = table.to_pydict()
     rows: list[SalesDailyRecord] = []

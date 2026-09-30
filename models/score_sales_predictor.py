@@ -65,6 +65,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
         default="auto",
         help="Inference device selection.",
     )
+    parser.add_argument("--currency", choices=("CAD", "USD", "GBP"), default="CAD")
     return parser
 
 
@@ -124,11 +125,15 @@ def run_scoring(args: argparse.Namespace) -> tuple[Path, Path]:
     checkpoint = torch.load(model_path, map_location="cpu")
     if not isinstance(checkpoint, dict):
         raise ValueError(f"Invalid checkpoint format in {model_path}")
+    if checkpoint.get("currency") != args.currency:
+        raise ValueError(
+            "Model currency does not match --currency; retrain legacy models"
+        )
 
     feature_mean = np.asarray(checkpoint["feature_mean"], dtype=np.float32)
     feature_std = np.asarray(checkpoint["feature_std"], dtype=np.float32)
 
-    records = load_gold_daily_revenue(args.gold_path)
+    records = load_gold_daily_revenue(args.gold_path, currency=args.currency)
     features, targets, store_ids, event_dates = build_lagged_sales_examples(records)
     features_norm = (features - feature_mean) / feature_std
 
@@ -153,6 +158,7 @@ def run_scoring(args: argparse.Namespace) -> tuple[Path, Path]:
         for idx in range(len(predicted)):
             record = {
                 "store_id": store_ids[idx],
+                "currency": args.currency,
                 "event_date": event_dates[idx].isoformat(),
                 "actual_daily_revenue": float(targets[idx]),
                 "predicted_daily_revenue": float(predicted[idx]),
@@ -166,6 +172,7 @@ def run_scoring(args: argparse.Namespace) -> tuple[Path, Path]:
         "model_path": str(model_path),
         "output_path": str(output_path),
         "rows_scored": int(len(predicted)),
+        "currency": args.currency,
         "metrics": metrics,
     }
     summary_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")

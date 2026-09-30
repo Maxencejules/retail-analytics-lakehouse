@@ -1,6 +1,18 @@
 # Retail Analytics Lakehouse
 
-Production-grade monorepo for a modular retail analytics lakehouse spanning ingestion, processing, warehousing, orchestration, quality, observability, and BI consumption.
+Retail analytics reference implementation with a real local PySpark Bronze/Silver/Gold batch pipeline and optional warehouse, orchestration, monitoring and BI components.
+
+The [batch contract](spark/batch/README.md) retains prior ingestion dates, rebuilds cumulative analytical outputs, separates CAD/USD/GBP values, rejects ambiguous latest transaction versions, and checks finite numeric values and required categories. Parquet writes require one writer and are not an atomic multi-table transaction. Optional cloud, Delta, streaming, dbt, Airflow and ML configurations do not establish a deployed production service or measured SLA.
+
+Reproduce the bounded history proof on Linux with Python3.11 and Java17:
+
+```bash
+python -m venv .venv
+.venv/bin/python -m pip install -r requirements-dev.txt
+.venv/bin/python scripts/verify_batch_history.py --output .tmp/batch-history-proof.json
+```
+
+This executes actual Spark and independently checks every Silver and Gold row across overlapping batches, corrections, replay, backfill and rejected-input repair. The fixture is synthetic. Its JSON records semantic output hashes, input hashes, source revision, environment and actual runtime; it is a correctness demonstration, not a capacity benchmark. CI retains the existing unit, generator/integration and benchmark gates.
 
 ## Table of Contents
 
@@ -65,7 +77,7 @@ Produced analytical datasets:
 
 ## Demo Preview
 
-Quick visual walkthrough from a real local run:
+Historical synthetic UI previews (the helper builds small Gold tables directly; these are not Spark correctness or current currency-contract evidence):
 
 ![Quickstart Terminal Demo](docs-site/assets/screenshots/quickstart-terminal.png)
 
@@ -175,12 +187,14 @@ Convert a CSV export of UCI Online Retail II into canonical transaction records:
 python ingestion/real/uci_online_retail.py \
   --input-path data/raw/online_retail_ii.csv \
   --output-path data/generated/transactions.csv.gz \
-  --currency USD \
+  --currency GBP \
   --payment-method credit_card \
   --channel online
 ```
 
 Expected source columns include `Invoice`/`InvoiceNo`, `StockCode`, `Quantity`, `InvoiceDate`, `Price`/`UnitPrice`, `Customer ID`/`CustomerID`, and `Country`.
+
+[UCI Online Retail II](https://archive.ics.uci.edu/dataset/502/online+retail+ii) prices are sterling, so GBP is the converter default. Selecting another currency changes only the label and is appropriate only for an already-converted source; this tool performs no FX conversion. It excludes cancellations, nonpositive sales, missing/invalid customers and nonfinite values. Country is a demo store identifier. CSV calendar timestamps are assumed UTC; `--timestamp-format` defaults to `%m/%d/%Y %H:%M` and must match your export. It never guesses between month/day and day/month. The dataset does not establish observed UTC instants. No real dataset is bundled with the proof.
 
 ### 2. Run Batch ETL (Synthetic or Real Input)
 
@@ -359,6 +373,7 @@ This platform is intentionally environment-driven. Do not hardcode deployment-sp
 - `WAREHOUSE_DSN`
 - `WAREHOUSE_SCHEMA`
 - `GOLD_BASE_PATH`
+- `DASHBOARD_CURRENCY` (`CAD` default, `USD`, or `GBP`; every monetary query uses one currency)
 
 ### Trino Federation
 

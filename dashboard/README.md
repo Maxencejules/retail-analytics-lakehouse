@@ -1,5 +1,7 @@
 # Executive Dashboard
 
+Choose `DASHBOARD_CURRENCY=CAD|USD|GBP` (CAD default). Warehouse and Gold monetary queries filter that currency, with no FX conversion. The page identifies the selected currency; values have no ambiguous dollar prefix. Rebuild old Gold files to obtain the new currency column. Gold period top products are summed from per-day top10 rows and labeled as truncated candidates. Selecting stores suppresses that Gold product query, ranking and export because those aggregates have no store attribution; the page explains this limit. Gold product-share highlights are omitted. Use warehouse facts for a complete period/store ranking. Table revenue shares describe only the displayed rows. Current Spark correctness evidence does not establish browser rendering or a deployed warehouse.
+
 Streamlit dashboard for executive stakeholders with:
 
 - Total Revenue

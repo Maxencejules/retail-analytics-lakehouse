@@ -15,7 +15,7 @@ from spark.batch.schemas import (
     validate_schema_exact,
 )
 
-ALLOWED_CURRENCIES: tuple[str, ...] = ("CAD", "USD")
+ALLOWED_CURRENCIES: tuple[str, ...] = ("CAD", "USD", "GBP")
 ALLOWED_CHANNELS: tuple[str, ...] = ("online", "store")
 ALLOWED_PAYMENT_METHODS: tuple[str, ...] = (
     "credit_card",
@@ -54,7 +54,11 @@ def _cast_bronze_to_silver(bronze_df: DataFrame) -> DataFrame:
             F.trim(F.col("store_id")).alias("store_id"),
             F.trim(F.col("customer_id")).alias("customer_id"),
             F.trim(F.col("product_id")).alias("product_id"),
-            F.col("quantity").cast("int").alias("quantity"),
+            F.when(
+                F.col("quantity").cast("decimal(38, 18)")
+                == F.col("quantity").cast("int"),
+                F.col("quantity").cast("int"),
+            ).alias("quantity"),
             F.col("unit_price").cast("double").alias("unit_price"),
             _normalize_currency_expr().alias("currency"),
             F.lower(F.trim(F.col("payment_method"))).alias("payment_method"),
@@ -93,16 +97,33 @@ def _annotate_quality_errors(df: DataFrame) -> DataFrame:
         )
         .when(F.col("quantity").isNull() | (F.col("quantity") <= 0), "invalid_quantity")
         .when(
-            F.col("unit_price").isNull() | (F.col("unit_price") <= 0),
+            F.col("unit_price").isNull()
+            | F.isnan("unit_price")
+            | (F.abs(F.col("unit_price")) == float("inf"))
+            | (F.col("unit_price") <= 0),
             "invalid_unit_price",
         )
-        .when(F.col("revenue").isNull() | (F.col("revenue") < 0), "invalid_revenue")
-        .when(~F.col("currency").isin(*ALLOWED_CURRENCIES), "invalid_currency")
         .when(
-            ~F.col("payment_method").isin(*ALLOWED_PAYMENT_METHODS),
+            F.col("revenue").isNull()
+            | F.isnan("revenue")
+            | (F.abs(F.col("revenue")) == float("inf"))
+            | (F.col("revenue") <= 0),
+            "invalid_revenue",
+        )
+        .when(F.col("ingestion_date").isNull(), "invalid_ingestion_date")
+        .when(
+            F.col("currency").isNull() | ~F.col("currency").isin(*ALLOWED_CURRENCIES),
+            "invalid_currency",
+        )
+        .when(
+            F.col("payment_method").isNull()
+            | ~F.col("payment_method").isin(*ALLOWED_PAYMENT_METHODS),
             "invalid_payment_method",
         )
-        .when(~F.col("channel").isin(*ALLOWED_CHANNELS), "invalid_channel")
+        .when(
+            F.col("channel").isNull() | ~F.col("channel").isin(*ALLOWED_CHANNELS),
+            "invalid_channel",
+        )
         .otherwise(F.lit(None)),
     )
 
@@ -122,17 +143,24 @@ def _fail_fast_if_invalid(df: DataFrame, *, stage: str) -> None:
 
 
 def _deduplicate_transactions(df: DataFrame) -> DataFrame:
-    # Dedupe on transaction_id and keep the latest timestamp to preserve the most current transaction state.
+    # Event timestamp is the existing version order; ingestion date breaks version ties.
+    # Exact retries collapse. Ambiguous latest versions fail instead of arbitrarily
+    # choosing the highest price (or a shuffle-dependent row).
     tie_breaker = Window.partitionBy("transaction_id").orderBy(
         F.col("ts_utc").desc_nulls_last(),
         F.col("ingestion_date").desc_nulls_last(),
-        F.col("unit_price").desc_nulls_last(),
     )
-    return (
-        df.withColumn("_row_num", F.row_number().over(tie_breaker))
-        .filter(F.col("_row_num") == 1)
-        .drop("_row_num")
+    latest = (
+        df.dropDuplicates()
+        .withColumn("_version", F.dense_rank().over(tie_breaker))
+        .filter(F.col("_version") == 1)
+        .drop("_version")
     )
+    if latest.groupBy("transaction_id").count().where("count > 1").limit(1).count():
+        raise DataQualityError(
+            "silver: conflicting latest versions of a transaction_id"
+        )
+    return latest
 
 
 def transform_bronze_to_silver(
@@ -177,7 +205,7 @@ def transform_bronze_to_silver(
 
 def build_gold_daily_revenue_by_store(silver_df: DataFrame) -> DataFrame:
     """Aggregate daily revenue and volume by store."""
-    return silver_df.groupBy("event_date", "store_id").agg(
+    return silver_df.groupBy("event_date", "store_id", "currency").agg(
         F.round(F.sum("revenue"), 2).alias("daily_revenue"),
         F.sum("quantity").alias("units_sold"),
         F.countDistinct("transaction_id").alias("transaction_count"),
@@ -191,12 +219,12 @@ def build_gold_top_10_products_by_day(silver_df: DataFrame) -> DataFrame:
     We apply a deterministic row_number tie-breaker so reruns produce identical
     top-10 membership when revenues are equal.
     """
-    product_daily = silver_df.groupBy("event_date", "product_id").agg(
+    product_daily = silver_df.groupBy("event_date", "product_id", "currency").agg(
         F.round(F.sum("revenue"), 2).alias("daily_revenue"),
         F.sum("quantity").alias("units_sold"),
         F.countDistinct("transaction_id").alias("transaction_count"),
     )
-    ranking = Window.partitionBy("event_date").orderBy(
+    ranking = Window.partitionBy("event_date", "currency").orderBy(
         F.col("daily_revenue").desc(),
         F.col("units_sold").desc(),
         F.col("product_id").asc(),
@@ -208,6 +236,7 @@ def build_gold_top_10_products_by_day(silver_df: DataFrame) -> DataFrame:
             "event_date",
             "rank",
             "product_id",
+            "currency",
             "daily_revenue",
             "units_sold",
             "transaction_count",
@@ -220,7 +249,7 @@ def build_gold_customer_lifetime_value(
 ) -> DataFrame:
     """Compute customer lifetime value as cumulative revenue across all transactions."""
     return (
-        silver_df.groupBy("customer_id")
+        silver_df.groupBy("customer_id", "currency")
         .agg(
             F.round(F.sum("revenue"), 2).alias("lifetime_value"),
             F.countDistinct("transaction_id").alias("transaction_count"),

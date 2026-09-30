@@ -6,8 +6,10 @@ import logging
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
+from pyspark.errors import AnalysisException
 
 from spark.batch.config import PipelineConfig
+from spark.batch.exceptions import DataQualityError
 from spark.batch.io import (
     ensure_delta_available,
     read_dataset,
@@ -21,6 +23,7 @@ from spark.batch.transforms import (
     prepare_bronze,
     transform_bronze_to_silver,
 )
+from spark.batch.schemas import TRANSACTION_REQUIRED_COLUMNS
 from spark.common.lineage import OpenLineageConfig, apply_openlineage
 from spark.common.performance import SparkPerformanceProfile, apply_performance_profile
 
@@ -47,15 +50,18 @@ def _log_count(df_name: str, count: int) -> None:
     LOGGER.info("record_count", extra={"context": {"dataset": df_name, "rows": count}})
 
 
-def run_pipeline(config: PipelineConfig) -> None:
+def run_pipeline(
+    config: PipelineConfig, *, spark_session: SparkSession | None = None
+) -> None:
     """Execute Bronze, Silver, and Gold ETL stages."""
     config.validate()
-    spark = build_spark_session(config)
-
-    if config.table_format == "delta":
-        ensure_delta_available(spark)
+    owns_session = spark_session is None
+    spark = spark_session or build_spark_session(config)
+    silver_df = None
 
     try:
+        if config.table_format == "delta":
+            ensure_delta_available(spark)
         LOGGER.info(
             "pipeline_start",
             extra={
@@ -75,9 +81,33 @@ def run_pipeline(config: PipelineConfig) -> None:
             input_path=config.input_path,
             input_format=config.input_format,
         )
-        _log_count("raw_transactions", raw_df.count())
+        raw_count = raw_df.count()
+        if raw_count == 0:
+            raise DataQualityError("bronze: input contains no transaction rows")
+        _log_count("raw_transactions", raw_count)
 
         bronze_df = prepare_bronze(raw_df, ingestion_date=config.ingestion_date)
+        # Mixed raw physical types would make retained Parquet partitions unreadable.
+        # Reject unsupported schema evolution before replacing any existing batch.
+        try:
+            existing_bronze = read_dataset(
+                spark,
+                path=config.bronze_transactions_path,
+                table_format=config.table_format,
+            )
+        except AnalysisException as exc:
+            if exc.getErrorClass() != "PATH_NOT_FOUND":
+                raise
+        else:
+            for name in TRANSACTION_REQUIRED_COLUMNS:
+                if (
+                    name not in existing_bronze.columns
+                    or existing_bronze.schema[name].dataType
+                    != raw_df.schema[name].dataType
+                ):
+                    raise DataQualityError(
+                        f"bronze: raw schema changed for {name}; normalize input to the retained schema"
+                    )
         # Bronze is intentionally raw: only ingestion_date metadata is appended for partition management.
         write_dataset(
             bronze_df,
@@ -85,19 +115,25 @@ def run_pipeline(config: PipelineConfig) -> None:
             table_format=config.table_format,
             partition_by=["ingestion_date"],
             mode="overwrite",
+            partition_overwrite_mode="dynamic",
+            replace_where=(
+                f"ingestion_date = DATE '{config.ingestion_date}'"
+                if config.table_format == "delta"
+                else None
+            ),
         )
 
-        bronze_current_df = read_dataset(
+        bronze_history_df = read_dataset(
             spark,
             path=config.bronze_transactions_path,
             table_format=config.table_format,
-        ).where(F.col("ingestion_date") == F.to_date(F.lit(config.ingestion_date)))
-        _log_count("bronze_transactions_ingestion_partition", bronze_current_df.count())
+        )
+        _log_count("bronze_transactions_history", bronze_history_df.count())
 
         silver_df = transform_bronze_to_silver(
-            bronze_current_df,
+            bronze_history_df,
             fail_fast_quality=config.fail_fast_quality,
-        )
+        ).cache()
         _log_count("silver_transactions", silver_df.count())
         write_dataset(
             silver_df,
@@ -129,7 +165,9 @@ def run_pipeline(config: PipelineConfig) -> None:
 
         gold_customer_ltv = build_gold_customer_lifetime_value(
             silver_df,
-            snapshot_date=config.ingestion_date,
+            snapshot_date=str(
+                bronze_history_df.agg(F.max("ingestion_date")).first()[0]
+            ),
         )
         _log_count("gold_customer_lifetime_value", gold_customer_ltv.count())
         write_dataset(
@@ -155,4 +193,7 @@ def run_pipeline(config: PipelineConfig) -> None:
             },
         )
     finally:
-        spark.stop()
+        if silver_df is not None:
+            silver_df.unpersist()
+        if owns_session:
+            spark.stop()
